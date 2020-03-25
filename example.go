@@ -13,7 +13,6 @@ import (
 
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
-	"github.com/coredns/coredns/plugin/pkg/cache"
 	clog "github.com/coredns/coredns/plugin/pkg/log"
 
 	"github.com/alecthomas/mph"
@@ -24,16 +23,11 @@ import (
 // friends to log.
 var log = clog.NewWithPlugin("example")
 
-// type Cache struct {
-// 	set map[string]struct{}
-// }
-
 // Example is an example plugin to show how to write a plugin.
 type Example struct {
-	Next      plugin.Handler
-	cache     *cache.Cache
+	Next plugin.Handler
+	// cache     *cache.Cache
 	blacklist *mph.CHD
-	// cache Cache
 }
 
 // ServeDNS implements the plugin.Handler interface. This method gets called when example is used
