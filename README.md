@@ -1,0 +1,1 @@
+# coredns-malicious-domain-plugin
