@@ -41,10 +41,9 @@ func (e Example) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg)
 	// Debug log that we've have seen the query. This will only be shown when the debug plugin is loaded.
 	log.Debug("Received response")
 
-	// log.Info(r.Question)
-	// log.Info(r.Ns)
+	// TODO: Remove this print, it's just for debugging
 	req := request.Request{W: w, Req: r}
-	log.Info(req.Name())
+	log.Info("Incoming request: ", req.Name())
 
 	hit := e.blacklist.Get([]byte(req.Name()))
 	if hit != nil {
