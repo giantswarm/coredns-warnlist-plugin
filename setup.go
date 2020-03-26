@@ -33,13 +33,6 @@ func setup(c *caddy.Controller) error {
 		log.Error("Unable to parse arguments: ", err)
 	}
 
-	if c.NextArg() {
-		// If there was another token, return an error, because we don't have any configuration.
-		// Any errors returned from this setup function should be wrapped with plugin.Error, so we
-		// can present a slightly nicer error message to the user.
-		return plugin.Error("example", c.ArgErr())
-	}
-
 	// Build the cache for the blacklist
 	blacklist, err := buildCacheFromFile(options.DomainFileName)
 	if err != nil {
@@ -51,7 +44,6 @@ func setup(c *caddy.Controller) error {
 	// this metric once, hence the "once.Do".
 	c.OnStartup(func() error {
 		once.Do(func() {
-			metrics.MustRegister(c, requestCount)
 			metrics.MustRegister(c, blacklistCount)
 		})
 		return nil
@@ -86,7 +78,7 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 
 	if options.DomainFileName == "" {
 		log.Error("domain blacklist file is required")
-		return options, c.ArgErr()
+		return options, plugin.Error("example", c.ArgErr())
 	}
 
 	return options, nil

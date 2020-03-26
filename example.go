@@ -45,17 +45,15 @@ func (e Example) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg)
 	req := request.Request{W: w, Req: r}
 	log.Info("Incoming request: ", req.Name())
 
+	// See if the requested domain is in the cache
 	hit := e.blacklist.Get([]byte(req.Name()))
 	if hit != nil {
-		blacklistCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-		log.Info("Blacklisted item: ", req.Name())
+		blacklistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
+		log.Info("IP ", req.IP(), " requested blacklisted item: ", req.Name())
 	}
 
 	// Wrap.
 	pw := NewResponsePrinter(w)
-
-	// Export metric with the server label set to the current server handling the request.
-	requestCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
 
 	// Call next plugin (if any).
 	return plugin.NextOrFailure(e.Name(), e.Next, ctx, pw, r)
@@ -77,6 +75,9 @@ func NewResponsePrinter(w dns.ResponseWriter) *ResponsePrinter {
 // WriteMsg calls the underlying ResponseWriter's WriteMsg method and prints "example" to standard output.
 func (r *ResponsePrinter) WriteMsg(res *dns.Msg) error {
 	fmt.Fprintln(out, "example2")
+	// log.Info(res.Answer)
+	// resp := request.Request{W: r.ResponseWriter, Req: res}
+	// log.Info(resp.IP())
 	return r.ResponseWriter.WriteMsg(res)
 }
 
