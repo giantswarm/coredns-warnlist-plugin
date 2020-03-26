@@ -15,6 +15,7 @@ import (
 	"github.com/caddyserver/caddy"
 )
 
+// PluginOptions stores the configuration options given in the corefile
 type PluginOptions struct {
 	DomainFileName string
 	IPFileName     string
@@ -49,7 +50,10 @@ func setup(c *caddy.Controller) error {
 	// prometheus plugin has been used - if so we will export metrics. We can only register
 	// this metric once, hence the "once.Do".
 	c.OnStartup(func() error {
-		once.Do(func() { metrics.MustRegister(c, requestCount) })
+		once.Do(func() {
+			metrics.MustRegister(c, requestCount)
+			metrics.MustRegister(c, blacklistCount)
+		})
 		return nil
 	})
 

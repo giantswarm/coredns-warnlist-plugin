@@ -47,8 +47,8 @@ func (e Example) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg)
 
 	hit := e.blacklist.Get([]byte(req.Name()))
 	if hit != nil {
+		blacklistCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
 		log.Info("Blacklisted item: ", req.Name())
-		// TODO: Increment metric for this domain
 	}
 
 	// Wrap.

@@ -16,4 +16,11 @@ var requestCount = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Help:      "Counter of requests made.",
 }, []string{"server"})
 
+var blacklistCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Namespace: plugin.Namespace,
+	Subsystem: "malicious_domain",
+	Name:      "malicious_domains_request_total",
+	Help:      "Counter of the number of requests made to blacklisted domains.",
+}, []string{"server"})
+
 var once sync.Once
