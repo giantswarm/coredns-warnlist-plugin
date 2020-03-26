@@ -1,13 +1,21 @@
-# example
+# malicious-domain
 
 ## Name
 
-*example* - prints "example" on every query handled.
+*malicious-domain* - prints a log message and exposes a Prometheus metrics when blacklisted domains are requested.
 
 ## Description
 
-The example plugin prints "example" on every query that go handled by the server. It serves as
-documentation for writing CoreDNS plugins.
+This plugin accepts a domain blacklist file and prints an error if a blacklisted domain is requested.
+It is planned to also expose a Prometheus metric with this information.
+
+## File Format
+
+The domain blacklist file should include one domain name per line.
+Each is assumed to be a FQDN from the global origin (i.e. names are transformed to include a trailing `.` if one is not present).
+
+There is currently a limitation in the underlying cache data structure that it cannot store a number of items which is a power of 2.
+This means you must not provide a blacklist file with exactly 2, 4, 8, etc. items.
 
 ## Compilation
 
@@ -18,7 +26,13 @@ The [manual](https://coredns.io/manual/toc/#what-is-coredns) will have more info
 A simple way to consume this plugin, is by adding the following on [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg), and recompile it as [detailed on coredns.io](https://coredns.io/2017/07/25/compile-time-enabling-or-disabling-plugins/#build-with-compile-time-configuration-file).
 
 ~~~
-example:github.com/coredns/example
+...
+errors:errors
+log:log
+example:github.com/giantswarm/coredns-malicious-domain-plugin  # Add this line
+dnstap:dnstap
+acl:acl
+...
 ~~~
 
 After this you can compile coredns by:
@@ -34,11 +48,10 @@ Or you can instead use make:
 make
 ```
 
-## Syntax
-
-~~~ txt
-example
-~~~
+To compile using a local copy of the plugin, you can add a `replace` directive to `go.mod`:
+```
+replace github.com/giantswarm/coredns-malicious-domain-plugin => /path/to/go/src/github.com/giantswarm/coredns-malicious-domain-plugin
+```
 
 ## Metrics
 
@@ -54,13 +67,13 @@ This plugin reports readiness to the ready plugin. It will be immediately ready.
 
 ## Examples
 
-In this configuration, we forward all queries to 9.9.9.9 and print "example" whenever we receive
-a query.
+Sample corefile to show blacklist behavior
 
 ~~~ corefile
 . {
-  forward . 9.9.9.9
-  example
+    log
+    whoami
+    example domains.txt
 }
 ~~~
 

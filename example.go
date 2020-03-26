@@ -9,10 +9,13 @@ import (
 	"io"
 	"os"
 
+	"github.com/coredns/coredns/request"
+
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 	clog "github.com/coredns/coredns/plugin/pkg/log"
 
+	"github.com/alecthomas/mph"
 	"github.com/miekg/dns"
 )
 
@@ -23,6 +26,8 @@ var log = clog.NewWithPlugin("example")
 // Example is an example plugin to show how to write a plugin.
 type Example struct {
 	Next plugin.Handler
+	// cache     *cache.Cache
+	blacklist *mph.CHD
 }
 
 // ServeDNS implements the plugin.Handler interface. This method gets called when example is used
@@ -35,6 +40,16 @@ func (e Example) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg)
 
 	// Debug log that we've have seen the query. This will only be shown when the debug plugin is loaded.
 	log.Debug("Received response")
+
+	// TODO: Remove this print, it's just for debugging
+	req := request.Request{W: w, Req: r}
+	log.Info("Incoming request: ", req.Name())
+
+	hit := e.blacklist.Get([]byte(req.Name()))
+	if hit != nil {
+		log.Info("Blacklisted item: ", req.Name())
+		// TODO: Increment metric for this domain
+	}
 
 	// Wrap.
 	pw := NewResponsePrinter(w)
@@ -61,7 +76,7 @@ func NewResponsePrinter(w dns.ResponseWriter) *ResponsePrinter {
 
 // WriteMsg calls the underlying ResponseWriter's WriteMsg method and prints "example" to standard output.
 func (r *ResponsePrinter) WriteMsg(res *dns.Msg) error {
-	fmt.Fprintln(out, "example")
+	fmt.Fprintln(out, "example2")
 	return r.ResponseWriter.WriteMsg(res)
 }
 
