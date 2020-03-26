@@ -15,6 +15,7 @@ import (
 	"github.com/caddyserver/caddy"
 )
 
+// PluginOptions stores the configuration options given in the corefile
 type PluginOptions struct {
 	DomainFileName string
 	IPFileName     string
@@ -32,13 +33,6 @@ func setup(c *caddy.Controller) error {
 		log.Error("Unable to parse arguments: ", err)
 	}
 
-	if c.NextArg() {
-		// If there was another token, return an error, because we don't have any configuration.
-		// Any errors returned from this setup function should be wrapped with plugin.Error, so we
-		// can present a slightly nicer error message to the user.
-		return plugin.Error("example", c.ArgErr())
-	}
-
 	// Build the cache for the blacklist
 	blacklist, err := buildCacheFromFile(options.DomainFileName)
 	if err != nil {
@@ -49,7 +43,9 @@ func setup(c *caddy.Controller) error {
 	// prometheus plugin has been used - if so we will export metrics. We can only register
 	// this metric once, hence the "once.Do".
 	c.OnStartup(func() error {
-		once.Do(func() { metrics.MustRegister(c, requestCount) })
+		once.Do(func() {
+			metrics.MustRegister(c, blacklistCount)
+		})
 		return nil
 	})
 
@@ -82,7 +78,7 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 
 	if options.DomainFileName == "" {
 		log.Error("domain blacklist file is required")
-		return options, c.ArgErr()
+		return options, plugin.Error("example", c.ArgErr())
 	}
 
 	return options, nil
