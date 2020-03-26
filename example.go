@@ -1,13 +1,11 @@
-// Package example is a CoreDNS plugin that prints "example" to stdout on every packet received.
-//
-// It serves as an example CoreDNS plugin with numerous code comments.
 package example
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/coredns/coredns/request"
 
@@ -25,38 +23,61 @@ var log = clog.NewWithPlugin("example")
 
 // Example is an example plugin to show how to write a plugin.
 type Example struct {
-	Next plugin.Handler
-	// cache     *cache.Cache
-	blacklist *mph.CHD
+	Next           plugin.Handler
+	blacklist      *mph.CHD
+	lastReloadTime time.Time
+	Options        PluginOptions
+	// quit           chan bool
 }
 
 // ServeDNS implements the plugin.Handler interface. This method gets called when example is used
 // in a Server.
-func (e Example) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
-	// This function could be simpler. I.e. just fmt.Println("example") here, but we want to show
-	// a slightly more complex example as to make this more interesting.
-	// Here we wrap the dns.ResponseWriter in a new ResponseWriter and call the next plugin, when the
-	// answer comes back, it will print "example".
+func (e *Example) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 
 	// Debug log that we've have seen the query. This will only be shown when the debug plugin is loaded.
 	log.Debug("Received response")
 
-	// TODO: Remove this print, it's just for debugging
-	req := request.Request{W: w, Req: r}
-	log.Info("Incoming request: ", req.Name())
-
-	// See if the requested domain is in the cache
-	hit := e.blacklist.Get([]byte(req.Name()))
-	if hit != nil {
-		blacklistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
-		log.Info("IP ", req.IP(), " requested blacklisted item: ", req.Name())
+	// For now, rebuild the blacklist if we get a new request after our reload period
+	// This should be made asynchronous in the future so as not to block requests
+	if time.Since(e.lastReloadTime) >= e.Options.ReloadPeriod {
+		e.reloadBlacklist(ctx)
 	}
 
-	// Wrap.
+	req := request.Request{W: w, Req: r}
+
+	if e.blacklist != nil {
+		// See if the requested domain is in the cache
+		hit := e.blacklist.Get([]byte(req.Name()))
+		if hit != nil {
+			blacklistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
+			log.Info("host ", req.IP(), " requested blacklisted domain: ", req.Name())
+		}
+	} else {
+		log.Warning("no blacklist has been loaded")
+	}
+
+	// Wrap the response when it returns from the next plugin
 	pw := NewResponsePrinter(w)
 
 	// Call next plugin (if any).
 	return plugin.NextOrFailure(e.Name(), e.Next, ctx, pw, r)
+}
+
+func (e *Example) reloadBlacklist(ctx context.Context) {
+	newBlacklist, err := buildCacheFromFile(e.Options.DomainFileName)
+	if err != nil {
+		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
+			// Special case where there are 2^n objects in the blacklist
+			log.Error("error rebuilding blacklist: number of items must not be a power of 2 (sorry)")
+		} else {
+			log.Error("error rebuilding blacklist: ", err)
+		}
+		reloadsFailedCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+	} else {
+		log.Info("updated blacklist")
+		e.blacklist = newBlacklist
+		e.lastReloadTime = time.Now()
+	}
 }
 
 // Name implements the Handler interface.
@@ -74,10 +95,8 @@ func NewResponsePrinter(w dns.ResponseWriter) *ResponsePrinter {
 
 // WriteMsg calls the underlying ResponseWriter's WriteMsg method and prints "example" to standard output.
 func (r *ResponsePrinter) WriteMsg(res *dns.Msg) error {
-	fmt.Fprintln(out, "example2")
-	// log.Info(res.Answer)
-	// resp := request.Request{W: r.ResponseWriter, Req: res}
-	// log.Info(resp.IP())
+	// fmt.Fprintln(out, "example2")
+	// TODO: Check return IP against IP blacklist?
 	return r.ResponseWriter.WriteMsg(res)
 }
 
