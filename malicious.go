@@ -1,4 +1,4 @@
-package example
+package malicious
 
 import (
 	"context"
@@ -19,10 +19,10 @@ import (
 
 // Define log to be a logger with the plugin name in it. This way we can just use log.Info and
 // friends to log.
-var log = clog.NewWithPlugin("example")
+var log = clog.NewWithPlugin("malicious")
 
-// Example is an example plugin to show how to write a plugin.
-type Example struct {
+// Malicious is a plugin which counts requests to blacklisted domains
+type Malicious struct {
 	Next           plugin.Handler
 	blacklist      *mph.CHD
 	lastReloadTime time.Time
@@ -30,9 +30,9 @@ type Example struct {
 	// quit           chan bool
 }
 
-// ServeDNS implements the plugin.Handler interface. This method gets called when example is used
+// ServeDNS implements the plugin.Handler interface. This method gets called when malicious is used
 // in a Server.
-func (e *Example) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 
 	// Debug log that we've have seen the query. This will only be shown when the debug plugin is loaded.
 	log.Debug("Received response")
@@ -63,7 +63,7 @@ func (e *Example) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg
 	return plugin.NextOrFailure(e.Name(), e.Next, ctx, pw, r)
 }
 
-func (e *Example) reloadBlacklist(ctx context.Context) {
+func (e *Malicious) reloadBlacklist(ctx context.Context) {
 	newBlacklist, err := buildCacheFromFile(e.Options.DomainFileName)
 	if err != nil {
 		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
@@ -81,9 +81,9 @@ func (e *Example) reloadBlacklist(ctx context.Context) {
 }
 
 // Name implements the Handler interface.
-func (e Example) Name() string { return "example" }
+func (e Malicious) Name() string { return "malicious" }
 
-// ResponsePrinter wrap a dns.ResponseWriter and will write example to standard output when WriteMsg is called.
+// ResponsePrinter wraps a dns.ResponseWriter and will let the plugin inspect the response.
 type ResponsePrinter struct {
 	dns.ResponseWriter
 }
@@ -93,7 +93,7 @@ func NewResponsePrinter(w dns.ResponseWriter) *ResponsePrinter {
 	return &ResponsePrinter{ResponseWriter: w}
 }
 
-// WriteMsg calls the underlying ResponseWriter's WriteMsg method and prints "example" to standard output.
+// WriteMsg calls the underlying ResponseWriter's WriteMsg method and handles our future response logic.
 func (r *ResponsePrinter) WriteMsg(res *dns.Msg) error {
 	// fmt.Fprintln(out, "example2")
 	// TODO: Check return IP against IP blacklist?
