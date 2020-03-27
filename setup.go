@@ -1,4 +1,4 @@
-package example
+package malicious
 
 import (
 	"bufio"
@@ -23,10 +23,10 @@ type PluginOptions struct {
 }
 
 // init registers this plugin.
-func init() { plugin.Register("example", setup) }
+func init() { plugin.Register("malicious", setup) }
 
-// setup is the function that gets called when the config parser see the token "example". Setup is responsible
-// for parsing any extra options the example plugin may have. The first token this function sees is "example".
+// setup is the function that gets called when the config parser sees the token "malicious". Setup is responsible
+// for parsing any extra options the plugin may have. The first token this function sees is "malicious".
 func setup(c *caddy.Controller) error {
 
 	options, err := parseArguments(c)
@@ -35,7 +35,6 @@ func setup(c *caddy.Controller) error {
 	}
 
 	// Build the cache for the blacklist
-
 	blacklist, err := buildCacheFromFile(options.DomainFileName)
 	reloadTime := time.Now()
 	if err != nil {
@@ -49,7 +48,7 @@ func setup(c *caddy.Controller) error {
 	}
 
 	// TODO: Make reload async
-	// e := Example{blacklist: blacklist, lastReloadTime: time.Now(), quit: make(chan bool)}
+	// e := Malicious{blacklist: blacklist, lastReloadTime: time.Now(), quit: make(chan bool)}
 	// reloadHook(&e)
 
 	// Add a startup function that will -- after all plugins have been loaded -- check if the
@@ -70,7 +69,7 @@ func setup(c *caddy.Controller) error {
 
 	// Add the Plugin to CoreDNS, so Servers can use it in their plugin chain.
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		return &Example{Next: next, blacklist: blacklist, lastReloadTime: reloadTime, Options: options}
+		return &Malicious{Next: next, blacklist: blacklist, lastReloadTime: reloadTime, Options: options}
 	})
 
 	// All OK, return a nil error.
@@ -108,7 +107,7 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 
 	if options.DomainFileName == "" {
 		log.Error("domain blacklist file is required")
-		return options, plugin.Error("example", c.ArgErr())
+		return options, plugin.Error("malicious", c.ArgErr())
 	}
 
 	return options, nil
@@ -164,7 +163,7 @@ func logTime(msg string, since time.Time) {
 }
 
 // TODO: Make reload asynchronous
-// func reloadHook(e *Example) {
+// func reloadHook(e *Malicious) {
 // 	go func() {
 // 		tick := time.NewTicker(time.Second * 5)
 // 		count := 0

@@ -12,10 +12,10 @@ It is planned to also expose a Prometheus metric with this information.
 ## Arguments
 
 Sample Corefile line:
-`example domains.txt ips.txt 5m`
+`malicious domains.txt ips.txt 5m`
 
 Tokens:
-`example` - the name of the plugin (for now)
+`malicious` - the name of the plugin (for now)
 `domains.txt` - the name of the file to load blacklisted domains
 `ips.txt` - the name of the file to load blacklisted IPs (not currently used)
 `5m` - a valid Go Duration after which the blacklist will be regenerated from the files
@@ -45,7 +45,7 @@ A simple way to consume this plugin, is by adding the following on [plugin.cfg](
 ...
 errors:errors
 log:log
-example:github.com/giantswarm/coredns-malicious-domain-plugin  # Add this line
+malicious:github.com/giantswarm/coredns-malicious-domain-plugin  # Add this line
 dnstap:dnstap
 acl:acl
 ...
@@ -95,7 +95,7 @@ Sample corefile
 . {
     log
     # whoami
-    example domains.txt ips.txt 5m
+    malicious domains.txt ips.txt 5m
     prometheus
 }
 ~~~

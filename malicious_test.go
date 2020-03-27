@@ -1,4 +1,4 @@
-package example
+package malicious
 
 import (
 	"bytes"
@@ -11,9 +11,9 @@ import (
 	"github.com/miekg/dns"
 )
 
-func TestExample(t *testing.T) {
-	// Create a new Example Plugin. Use the test.ErrorHandler as the next plugin.
-	x := Example{Next: test.ErrorHandler()}
+func TestMalicious(t *testing.T) {
+	// Create a new Malicious Plugin. Use the test.ErrorHandler as the next plugin.
+	x := Malicious{Next: test.ErrorHandler()}
 
 	// Setup a new output buffer that is *not* standard output, so we can check if
 	// example is really being printed.
