@@ -1,5 +1,7 @@
 # malicious-domain
 
+2020 Q1 Hackathon project
+
 ## Name
 
 *malicious-domain* - prints a log message and exposes Prometheus metrics when blacklisted domains are requested.
@@ -7,7 +9,7 @@
 ## Description
 
 This plugin accepts a domain blacklist file and prints an error if a blacklisted domain is requested.
-It is planned to also expose a Prometheus metric with this information.
+It also exposes a Prometheus counter of the number of encountered blacklisted domains, with labels.
 
 ## Arguments
 
@@ -15,17 +17,18 @@ Sample Corefile line:
 `malicious domains.txt ips.txt 5m`
 
 Tokens:
-`malicious` - the name of the plugin (for now)
-`domains.txt` - the name of the file to load blacklisted domains
-`ips.txt` - the name of the file to load blacklisted IPs (not currently used)
-`5m` - a valid Go Duration after which the blacklist will be regenerated from the files
+
+- `malicious` - the name of the plugin
+- `domains.txt` - the name of the file to load blacklisted domains
+- `ips.txt` - the name of the file to load blacklisted IPs (not currently implemented)
+- `5m` - a valid Go Duration after which the blacklist will be regenerated from the files
 
 ## File Format
 
 The domain blacklist file should include one domain name per line.
 Each is assumed to be a FQDN from the global origin (i.e. names are transformed to include a trailing `.` if one is not present).
 
-There is currently a limitation in the underlying cache data structure that it cannot store a number of items which is a power of 2.
+**Note:** There is currently a limitation in the underlying cache data structure that it cannot store a number of items which is a power of 2.
 This means you must not provide a blacklist file with exactly 2, 4, 8, etc. items.
 
 Sample:
@@ -77,11 +80,14 @@ If monitoring is enabled (via the *prometheus* directive) the following metrics 
 * `malicious_domain_failed_reloads_count{server}` - counts the number of times the plugin has failed to reload its blacklist
 
 The `server` label indicated which server handled the request.
+
 The `requestor` label indicates the IP which requested the domain.
+
 The `domain` label indicates the actual domain which was requested.
+
 See the *metrics* plugin for more details.
 
-By default, you can see the exported Prometheus metrics at `http://localhost:9153/metrics`
+By default, you can see the exported Prometheus metrics at `http://localhost:9153/metrics` when `coredns` is running.
 
 ## Ready
 
