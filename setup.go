@@ -11,7 +11,6 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 
-	"github.com/alecthomas/mph"
 	"github.com/caddyserver/caddy"
 )
 
@@ -113,7 +112,7 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 	return options, nil
 }
 
-func buildCacheFromFile(fileName string) (*mph.CHD, error) {
+func buildCacheFromFile(fileName string) (Blacklist, error) {
 	// Print a log message with the time it took to build the cache
 	defer logTime("Building blacklist cache took %s", time.Now())
 
@@ -123,37 +122,98 @@ func buildCacheFromFile(fileName string) (*mph.CHD, error) {
 	}
 	defer file.Close()
 
-	builder := mph.Builder()
+	blacklist := NewBlacklist()
 
 	// Known issue: the number of items in the cache must not be a power of 2
 	// Because... math. So no files with only 2 entries. Or 4. Or 8... etc.
 	// TODO: Get around this. Replace mph with custom hash set? Add a safe dummy blacklist item?
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
+
 		domain := strings.TrimSpace(scanner.Text())
-		if domain == "" {
+		if strings.HasPrefix("#", domain) {
+			// Skip comment lines
 			continue
 		}
+
+		if domain == "" {
+			// Skip empty lines
+			continue
+		}
+
+		// domain = strings.Split(domain, " ")[1] // Assumes hostfile format:   127.0.0.1  some.host
 
 		// Assume all domains are global origin, with trailing dot (e.g. example.com.)
 		if !strings.HasSuffix(domain, ".") {
 			domain += "."
 		}
 		// log.Info("Adding ", domain, " to domain blacklist")
-		builder.Add([]byte(domain), []byte(""))
+		blacklist.Add(domain)
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Error(err)
 	}
 
-	blacklist, err := builder.Build()
+	// blacklist, err := builder.Build()
+	err = blacklist.Close()
 	if err == nil {
 		log.Infof("added %d domains to blacklist", blacklist.Len())
 	}
 
 	return blacklist, err
 }
+
+// func buildCacheFromFile(fileName string) (*mph.CHD, error) {
+// 	// Print a log message with the time it took to build the cache
+// 	defer logTime("Building blacklist cache took %s", time.Now())
+
+// 	file, err := os.Open(fileName)
+// 	if err != nil {
+// 		log.Error(err)
+// 	}
+// 	defer file.Close()
+
+// 	builder := mph.Builder()
+
+// 	// Known issue: the number of items in the cache must not be a power of 2
+// 	// Because... math. So no files with only 2 entries. Or 4. Or 8... etc.
+// 	// TODO: Get around this. Replace mph with custom hash set? Add a safe dummy blacklist item?
+// 	scanner := bufio.NewScanner(file)
+// 	for scanner.Scan() {
+
+// 		domain := strings.TrimSpace(scanner.Text())
+// 		if strings.HasPrefix("#", domain) {
+// 			// Skip comment lines
+// 			continue
+// 		}
+
+// 		if domain == "" {
+// 			// Skip empty lines
+// 			continue
+// 		}
+
+// 		// domain = strings.Split(domain, " ")[1] // Assumes hostfile format:   127.0.0.1  some.host
+
+// 		// Assume all domains are global origin, with trailing dot (e.g. example.com.)
+// 		if !strings.HasSuffix(domain, ".") {
+// 			domain += "."
+// 		}
+// 		// log.Info("Adding ", domain, " to domain blacklist")
+// 		builder.Add([]byte(domain), []byte(""))
+// 	}
+
+// 	if err := scanner.Err(); err != nil {
+// 		log.Error(err)
+// 	}
+
+// 	blacklist, err := builder.Build()
+// 	if err == nil {
+// 		log.Infof("added %d domains to blacklist", blacklist.Len())
+// 	}
+
+// 	return blacklist, err
+// }
 
 // Prints the elapsed time in the pre-formatted message
 func logTime(msg string, since time.Time) {

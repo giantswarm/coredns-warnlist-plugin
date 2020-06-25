@@ -13,7 +13,6 @@ import (
 	"github.com/coredns/coredns/plugin/metrics"
 	clog "github.com/coredns/coredns/plugin/pkg/log"
 
-	"github.com/alecthomas/mph"
 	"github.com/miekg/dns"
 )
 
@@ -24,7 +23,7 @@ var log = clog.NewWithPlugin("malicious")
 // Malicious is a plugin which counts requests to blacklisted domains
 type Malicious struct {
 	Next           plugin.Handler
-	blacklist      *mph.CHD
+	blacklist      Blacklist
 	lastReloadTime time.Time
 	Options        PluginOptions
 	// quit           chan bool
@@ -47,8 +46,8 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 
 	if e.blacklist != nil {
 		// See if the requested domain is in the cache
-		hit := e.blacklist.Get([]byte(req.Name()))
-		if hit != nil {
+		// hit := e.blacklist.Get([]byte(req.Name()))
+		if e.blacklist.Contains(req.Name()) {
 			blacklistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
 			log.Info("host ", req.IP(), " requested blacklisted domain: ", req.Name())
 		}
