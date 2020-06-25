@@ -1,6 +1,10 @@
 package malicious
 
-import "github.com/alecthomas/mph"
+import (
+	"strings"
+
+	"github.com/alecthomas/mph"
+)
 
 type Blacklist interface {
 	Add(key string)
@@ -15,9 +19,35 @@ type Blacklist interface {
 // }
 
 func NewBlacklist() Blacklist {
-	b := &MPHBlacklist{}
+	b := &GoMapBlacklist{}
 	b.Open()
 	return b
+}
+
+type GoMapBlacklist struct {
+	blacklist map[string]struct{}
+}
+
+func (m *GoMapBlacklist) Add(key string) {
+	m.blacklist[key] = struct{}{}
+}
+
+func (m *GoMapBlacklist) Contains(key string) bool {
+	_, ok := m.blacklist[key]
+	return ok
+}
+
+func (m *GoMapBlacklist) Close() error {
+	// Nothing to do to close a map
+	return nil
+}
+
+func (m *GoMapBlacklist) Len() int {
+	return len(m.blacklist)
+}
+
+func (m *GoMapBlacklist) Open() {
+	m.blacklist = make(map[string]struct{})
 }
 
 type MPHBlacklist struct {
@@ -36,7 +66,16 @@ func (m *MPHBlacklist) Contains(key string) bool {
 
 func (m *MPHBlacklist) Close() error {
 	blacklist, err := m.builder.Build()
-
+	if err != nil {
+		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
+			// Special case where there are 2^n objects in the mph blacklist
+			m.Add("some.bogus")
+			msg := "when using the MPH backend, the number of items must not be a power of 2. The domain \"some.bogus\" has been added to allow building the cache."
+			log.Warning(msg)
+			blacklist, err = m.builder.Build()
+		}
+	}
+	m.builder = nil
 	m.blacklist = blacklist
 
 	return err
