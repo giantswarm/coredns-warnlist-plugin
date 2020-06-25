@@ -1,9 +1,7 @@
 package malicious
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -11,7 +9,6 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 
-	"github.com/alecthomas/mph"
 	"github.com/caddyserver/caddy"
 )
 
@@ -39,7 +36,7 @@ func setup(c *caddy.Controller) error {
 	reloadTime := time.Now()
 	if err != nil {
 		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
-			// Special case where there are 2^n objects in the blacklist
+			// Special case where there are 2^n objects in the mph blacklist
 			log.Error("error building blacklist: number of items must not be a power of 2 (sorry)")
 		} else {
 			log.Error("error building blacklist: ", err)
@@ -58,6 +55,7 @@ func setup(c *caddy.Controller) error {
 		once.Do(func() {
 			metrics.MustRegister(c, blacklistCount)
 			metrics.MustRegister(c, reloadsFailedCount)
+			metrics.MustRegister(c, blacklistCheckDuration)
 		})
 		return nil
 	})
@@ -113,41 +111,16 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 	return options, nil
 }
 
-func buildCacheFromFile(fileName string) (*mph.CHD, error) {
+func buildCacheFromFile(fileName string) (Blacklist, error) {
 	// Print a log message with the time it took to build the cache
 	defer logTime("Building blacklist cache took %s", time.Now())
 
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Error(err)
-	}
-	defer file.Close()
-
-	builder := mph.Builder()
-
-	// Known issue: the number of items in the cache must not be a power of 2
-	// Because... math. So no files with only 2 entries. Or 4. Or 8... etc.
-	// TODO: Get around this. Replace mph with custom hash set? Add a safe dummy blacklist item?
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		domain := strings.TrimSpace(scanner.Text())
-		if domain == "" {
-			continue
-		}
-
-		// Assume all domains are global origin, with trailing dot (e.g. example.com.)
-		if !strings.HasSuffix(domain, ".") {
-			domain += "."
-		}
-		// log.Info("Adding ", domain, " to domain blacklist")
-		builder.Add([]byte(domain), []byte(""))
+	blacklist := NewBlacklist()
+	for domain := range domainsGenerator(fileName, DomainSourceTypeFile, DomainFileFormatHostfile) {
+		blacklist.Add(domain)
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Error(err)
-	}
-
-	blacklist, err := builder.Build()
+	err := blacklist.Close()
 	if err == nil {
 		log.Infof("added %d domains to blacklist", blacklist.Len())
 	}

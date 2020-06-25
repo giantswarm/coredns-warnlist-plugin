@@ -22,4 +22,11 @@ var reloadsFailedCount = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Help:      "Counter of the number of times the plugin has failed to reload its blacklist.",
 }, []string{"server"})
 
+var blacklistCheckDuration = prometheus.NewSummaryVec(prometheus.SummaryOpts{
+	Namespace: plugin.Namespace,
+	Subsystem: "malicious_domain",
+	Name:      "malicious_domain_cache_check_duration_seconds",
+	Help:      "Estimate of the average duration required to check the cache for a blacklisted domain.",
+}, []string{"server"})
+
 var once sync.Once
