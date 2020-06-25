@@ -15,7 +15,7 @@ const (
 	DomainSourceTypeURL      = "url"
 )
 
-func domainsGenerator(source string, sourceType string, sourceFormat string) chan string {
+func domainsFromSource(source string, sourceType string, sourceFormat string) chan string {
 
 	c := make(chan string)
 

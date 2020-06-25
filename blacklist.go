@@ -1,7 +1,9 @@
 package malicious
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/alecthomas/mph"
 )
@@ -87,4 +89,28 @@ func (m *MPHBlacklist) Len() int {
 
 func (m *MPHBlacklist) Open() {
 	m.builder = mph.Builder()
+}
+
+func buildCacheFromFile(options PluginOptions) (Blacklist, error) {
+	// Print a log message with the time it took to build the cache
+	defer logTime("Building blacklist cache took %s", time.Now())
+
+	blacklist := NewBlacklist()
+	for domain := range domainsFromSource(options.DomainSource, options.DomainSourceType, options.FileFormat) {
+		blacklist.Add(domain)
+	}
+
+	err := blacklist.Close()
+	if err == nil {
+		log.Infof("added %d domains to blacklist", blacklist.Len())
+	}
+
+	return blacklist, err
+}
+
+// Prints the elapsed time in the pre-formatted message
+func logTime(msg string, since time.Time) {
+	elapsed := time.Since(since)
+	msg = fmt.Sprintf(msg, elapsed)
+	log.Info(msg)
 }

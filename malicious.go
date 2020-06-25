@@ -60,6 +60,8 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(e.blacklist.Len()))
 	} else {
 		log.Warning("no blacklist has been loaded")
+		// Update the current blacklist size metric to 0
+		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(0))
 	}
 
 	// Wrap the response when it returns from the next plugin
@@ -102,7 +104,6 @@ func NewResponsePrinter(w dns.ResponseWriter) *ResponsePrinter {
 // WriteMsg calls the underlying ResponseWriter's WriteMsg method and handles our future response logic.
 func (r *ResponsePrinter) WriteMsg(res *dns.Msg) error {
 	// fmt.Fprintln(out, "example2")
-	// TODO: Check return IP against IP blacklist?
 	return r.ResponseWriter.WriteMsg(res)
 }
 
