@@ -14,9 +14,12 @@ import (
 
 // PluginOptions stores the configuration options given in the corefile
 type PluginOptions struct {
-	DomainFileName string
-	IPFileName     string
-	ReloadPeriod   time.Duration
+	// DomainFileName string
+	// DomainURL string
+	DomainSource     string
+	DomainSourceType string
+	FileFormat       string
+	ReloadPeriod     time.Duration
 }
 
 // init registers this plugin.
@@ -29,10 +32,11 @@ func setup(c *caddy.Controller) error {
 	options, err := parseArguments(c)
 	if err != nil {
 		log.Error("Unable to parse arguments: ", err)
+		return err
 	}
 
 	// Build the cache for the blacklist
-	blacklist, err := buildCacheFromFile(options.DomainFileName)
+	blacklist, err := buildCacheFromFile(options)
 	reloadTime := time.Now()
 	if err != nil {
 		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
@@ -56,6 +60,7 @@ func setup(c *caddy.Controller) error {
 			metrics.MustRegister(c, blacklistCount)
 			metrics.MustRegister(c, reloadsFailedCount)
 			metrics.MustRegister(c, blacklistCheckDuration)
+			metrics.MustRegister(c, blacklistSize)
 		})
 		return nil
 	})
@@ -79,44 +84,84 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 
 	options := PluginOptions{}
 
-	i := 1
-	for c.Next() {
-		switch i {
-		case 1:
-			// 1st token is domain blacklist file
-			log.Info("Using domain blacklist file: ", c.Val())
-			options.DomainFileName = c.Val()
-		case 2:
-			// 2nd token is IP blacklist file
-			log.Info("Using IP blacklist file: ", c.Val())
-			options.IPFileName = c.Val()
-		case 3:
-			// 3rd token is reload time
-			t, err := time.ParseDuration(c.Val())
-			if err != nil {
-				log.Error("unable to parse reload duration")
-			} else {
-				log.Info("Setting reload time to: ", c.Val())
-				options.ReloadPeriod = t
-			}
+	for c.NextBlock() {
+		if err := parseBlock(c, &options); err != nil {
+			return options, err
 		}
-		i++
 	}
 
-	if options.DomainFileName == "" {
-		log.Error("domain blacklist file is required")
+	// Check that a source for the blacklist was given
+	if options.DomainSource == "" {
+		log.Error("domain blacklist file or url is required")
 		return options, plugin.Error("malicious", c.ArgErr())
+	}
+
+	// Check that the specified file format is valid
+	valid := false
+	for _, t := range []string{DomainFileFormatHostfile, DomainFileFormatTextList} {
+		if options.FileFormat == t {
+			valid = true
+		}
+	}
+	if !valid {
+		return options, plugin.Error("malicious", c.Errf("unknown file format: %s", options.FileFormat))
 	}
 
 	return options, nil
 }
 
-func buildCacheFromFile(fileName string) (Blacklist, error) {
+func parseBlock(c *caddy.Controller, options *PluginOptions) error {
+	switch c.Val() {
+	case "file":
+		if !c.NextArg() {
+			return c.ArgErr()
+		}
+		options.DomainSource = c.Val()
+		options.DomainSourceType = DomainSourceTypeFile
+		if !c.NextArg() {
+			return c.ArgErr()
+		}
+		options.FileFormat = c.Val()
+		log.Infof("Using domain blacklist file: %s with format %s", options.DomainSource, options.FileFormat)
+
+	case "url":
+		if !c.NextArg() {
+			return c.ArgErr()
+		}
+		if options.DomainSource != "" {
+			return c.Err("file argument was already specified. Plugin can use either 'file' or 'url' option, but not both")
+		}
+		options.DomainSource = c.Val()
+		options.DomainSourceType = DomainSourceTypeURL
+		if !c.NextArg() {
+			return c.ArgErr()
+		}
+		options.FileFormat = c.Val()
+		log.Infof("Using domain blacklist url: %s with format %s", options.DomainSource, options.FileFormat)
+
+	case "reload":
+		if !c.NextArg() {
+			return c.ArgErr()
+		}
+
+		t, err := time.ParseDuration(c.Val())
+		if err != nil {
+			log.Error("unable to parse reload duration")
+			return c.ArgErr()
+		}
+		options.ReloadPeriod = t
+		log.Infof("Using reload period of: %s", options.ReloadPeriod)
+	}
+
+	return nil
+}
+
+func buildCacheFromFile(options PluginOptions) (Blacklist, error) {
 	// Print a log message with the time it took to build the cache
 	defer logTime("Building blacklist cache took %s", time.Now())
 
 	blacklist := NewBlacklist()
-	for domain := range domainsGenerator(fileName, DomainSourceTypeFile, DomainFileFormatHostfile) {
+	for domain := range domainsGenerator(options.DomainSource, options.DomainSourceType, options.FileFormat) {
 		blacklist.Add(domain)
 	}
 
