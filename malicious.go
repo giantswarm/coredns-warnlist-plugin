@@ -56,6 +56,8 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 			log.Warning("host ", req.IP(), " requested blacklisted domain: ", req.Name())
 		}
 
+		// Update the current blacklist size metric
+		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(e.blacklist.Len()))
 	} else {
 		log.Warning("no blacklist has been loaded")
 	}
@@ -68,7 +70,7 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 }
 
 func (e *Malicious) reloadBlacklist(ctx context.Context) {
-	newBlacklist, err := buildCacheFromFile(e.Options.DomainFileName)
+	newBlacklist, err := buildCacheFromFile(e.Options)
 	if err != nil {
 		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
 			// Special case where there are 2^n objects in the mph blacklist
@@ -78,9 +80,9 @@ func (e *Malicious) reloadBlacklist(ctx context.Context) {
 		}
 		reloadsFailedCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
 	} else {
-		log.Info("updated blacklist")
 		e.blacklist = newBlacklist
 		e.lastReloadTime = time.Now()
+		log.Info("updated blacklist")
 	}
 }
 

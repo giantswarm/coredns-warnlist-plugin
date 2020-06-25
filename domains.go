@@ -3,6 +3,7 @@ package malicious
 import (
 	"bufio"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -20,19 +21,28 @@ func domainsGenerator(source string, sourceType string, sourceFormat string) cha
 
 	go func() {
 		defer close(c)
-		// TODO: handle URL vs file
-		// if sourceType == DomainSourceTypeFile {
 
-		// } else if sourceType == DomainSourceTypeURL {
-		// 	// TODO
-
-		// }
-
-		sourceData, err := os.Open(source)
-		if err != nil {
-			log.Error(err)
+		var sourceData io.Reader
+		{
+			if sourceType == DomainSourceTypeFile {
+				log.Infof("Loading from file: %s", source)
+				file, err := os.Open(source)
+				if err != nil {
+					log.Error(err)
+				}
+				defer file.Close()
+				sourceData = file
+			} else if sourceType == DomainSourceTypeURL {
+				// TODO
+				log.Infof("Loading from URL: %s", source)
+				resp, err := http.Get(source)
+				if err != nil {
+					log.Error(err)
+				}
+				defer resp.Body.Close()
+				sourceData = resp.Body
+			}
 		}
-		defer sourceData.Close()
 
 		scanner := bufio.NewScanner(sourceData)
 		for scanner.Scan() {
@@ -55,19 +65,14 @@ func domainsGenerator(source string, sourceType string, sourceFormat string) cha
 			if !strings.HasSuffix(domain, ".") {
 				domain += "."
 			}
-			// log.Info("Adding ", domain, " to domain blacklist")
+
 			c <- domain
 		}
 		if err := scanner.Err(); err != nil {
 			log.Error(err)
 		}
-		// close(c)
 	}()
 
 	return c
 
-}
-
-func domainsFromFile(file io.Reader, fileType string) []string {
-	return []string{}
 }
