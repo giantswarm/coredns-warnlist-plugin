@@ -1,8 +1,6 @@
 package malicious
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/coredns/coredns/core/dnsserver"
@@ -14,8 +12,6 @@ import (
 
 // PluginOptions stores the configuration options given in the corefile
 type PluginOptions struct {
-	// DomainFileName string
-	// DomainURL string
 	DomainSource     string
 	DomainSourceType string
 	FileFormat       string
@@ -39,13 +35,8 @@ func setup(c *caddy.Controller) error {
 	blacklist, err := buildCacheFromFile(options)
 	reloadTime := time.Now()
 	if err != nil {
-		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
-			// Special case where there are 2^n objects in the mph blacklist
-			log.Error("error building blacklist: number of items must not be a power of 2 (sorry)")
-		} else {
-			log.Error("error building blacklist: ", err)
-		}
-		reloadTime = time.Time{} // Time zero date
+		// Require the first build to succeed
+		return err
 	}
 
 	// TODO: Make reload async
@@ -110,6 +101,7 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 	return options, nil
 }
 
+// Parses the configuration lines following our plugin declaration in the Corefile
 func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 	switch c.Val() {
 	case "file":
@@ -154,30 +146,6 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 	}
 
 	return nil
-}
-
-func buildCacheFromFile(options PluginOptions) (Blacklist, error) {
-	// Print a log message with the time it took to build the cache
-	defer logTime("Building blacklist cache took %s", time.Now())
-
-	blacklist := NewBlacklist()
-	for domain := range domainsGenerator(options.DomainSource, options.DomainSourceType, options.FileFormat) {
-		blacklist.Add(domain)
-	}
-
-	err := blacklist.Close()
-	if err == nil {
-		log.Infof("added %d domains to blacklist", blacklist.Len())
-	}
-
-	return blacklist, err
-}
-
-// Prints the elapsed time in the pre-formatted message
-func logTime(msg string, since time.Time) {
-	elapsed := time.Since(since)
-	msg = fmt.Sprintf(msg, elapsed)
-	log.Info(msg)
 }
 
 // TODO: Make reload asynchronous
