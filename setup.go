@@ -52,17 +52,20 @@ func setup(c *caddy.Controller) error {
 		return nil
 	})
 
-	// c.OnFinalShutdown(func() error {
-	// 	e.quit <- true
-	// 	return nil
-	// })
-
 	// Add the Plugin to CoreDNS, so Servers can use it in their plugin chain.
 	q := make(chan bool)
 	m := Malicious{blacklist: blacklist, lastReloadTime: reloadTime, Options: options, quit: q}
 
-	tick := time.NewTicker(time.Second * 30)
+	// tick := time.NewTicker(time.Second * 30)
+	tick := time.NewTicker(options.ReloadPeriod)
 	reloadHook(&m, tick)
+
+	c.OnFinalShutdown(func() error {
+		log.Info("Final Shutdown")
+		tick.Stop()
+		m.quit <- true
+		return nil
+	})
 
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
 		m.Next = next
@@ -82,36 +85,25 @@ func reloadHook(e *Malicious, tick *time.Ticker) { //, quit chan bool) {
 		// tick := time.NewTicker(time.Second * 5)
 		// defer tick.Stop()
 		log.Info("func called")
-		count := 0
+		// count := 0
 		for {
 			log.Info("loop iteration")
 			select {
 			case <-tick.C:
 				log.Info("Hook ticked")
 
-				count++
-				if count > 2 {
-					log.Info("Sending quit to hook")
-					e.quit <- true
-					// break
-				}
+				// count++
+				// if count > 5 {
+				// 	log.Info("Sending quit to hook")
+				// 	e.quit <- true
+				// 	// break
+				// }
 
-				// Rebuild the cache for the blacklist
-				blacklist, err := buildCacheFromFile(e.Options)
-				if err != nil {
-					log.Errorf("error rebuilding blacklist: %v#", err)
-					// reloadsFailedCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-					// Don't update the existing blacklist
-				} else {
-					reloadTime := time.Now()
-					e.blacklist = blacklist
-					e.lastReloadTime = reloadTime
-				}
-
-				// blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(e.blacklist.Len()))
+				rebuildBlacklist(e)
 
 			case <-e.quit:
 				log.Info("Stopping hook")
+				tick.Stop()
 				return
 			}
 		}
@@ -195,26 +187,3 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 
 	return nil
 }
-
-// TODO: Make reload asynchronous
-// func reloadHook(e *Malicious) {
-// 	go func() {
-// 		tick := time.NewTicker(time.Second * 5)
-// 		count := 0
-// 		for {
-// 			select {
-// 			case <-e.quit:
-// 				log.Info("Stopping hook")
-// 				return
-
-// 			case <-tick.C:
-// 				log.Info("Hook ticked")
-// 				count++
-// 				if count > 5 {
-// 					e.quit <- true
-// 					break
-// 				}
-// 			}
-// 		}
-// 	}()
-// }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/coredns/coredns/request"
@@ -26,6 +25,7 @@ type Malicious struct {
 	blacklist      Blacklist
 	lastReloadTime time.Time
 	Options        PluginOptions
+	serverName     string
 	quit           chan bool
 }
 
@@ -38,9 +38,9 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 
 	// For now, rebuild the blacklist if we get a new request after our reload period
 	// This should be made asynchronous in the future so as not to block requests
-	if time.Since(e.lastReloadTime) >= e.Options.ReloadPeriod {
-		e.reloadBlacklist(ctx)
-	}
+	// if time.Since(e.lastReloadTime) >= e.Options.ReloadPeriod {
+	// 	e.reloadBlacklist(ctx)
+	// }
 
 	req := request.Request{W: w, Req: r}
 
@@ -48,6 +48,7 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		// See if the requested domain is in the cache
 		retrievalStart := time.Now()
 		hit := e.blacklist.Contains(req.Name())
+
 		// Record the duration for the query
 		blacklistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
 
@@ -64,6 +65,11 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(0))
 	}
 
+	// Update the server name from context if it has changed
+	if metrics.WithServer(ctx) != e.serverName {
+		e.serverName = metrics.WithServer(ctx)
+	}
+
 	// Wrap the response when it returns from the next plugin
 	pw := NewResponsePrinter(w)
 
@@ -71,22 +77,22 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	return plugin.NextOrFailure(e.Name(), e.Next, ctx, pw, r)
 }
 
-func (e *Malicious) reloadBlacklist(ctx context.Context) {
-	newBlacklist, err := buildCacheFromFile(e.Options)
-	if err != nil {
-		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
-			// Special case where there are 2^n objects in the mph blacklist
-			log.Error("error rebuilding blacklist: number of items must not be a power of 2 (sorry)")
-		} else {
-			log.Error("error rebuilding blacklist: ", err)
-		}
-		reloadsFailedCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-	} else {
-		e.blacklist = newBlacklist
-		e.lastReloadTime = time.Now()
-		log.Info("updated blacklist")
-	}
-}
+// func (e *Malicious) reloadBlacklist(ctx context.Context) {
+// 	newBlacklist, err := buildCacheFromFile(e.Options)
+// 	if err != nil {
+// 		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
+// 			// Special case where there are 2^n objects in the mph blacklist
+// 			log.Error("error rebuilding blacklist: number of items must not be a power of 2 (sorry)")
+// 		} else {
+// 			log.Error("error rebuilding blacklist: ", err)
+// 		}
+// 		reloadsFailedCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+// 	} else {
+// 		e.blacklist = newBlacklist
+// 		e.lastReloadTime = time.Now()
+// 		log.Info("updated blacklist")
+// 	}
+// }
 
 // Name implements the Handler interface.
 func (e Malicious) Name() string { return "malicious" }

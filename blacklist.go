@@ -16,10 +16,6 @@ type Blacklist interface {
 	Open()
 }
 
-// type BlacklistBuilder interface {
-// 	New(b Blacklist) Blacklist
-// }
-
 func NewBlacklist() Blacklist {
 	b := &GoMapBlacklist{}
 	b.Open()
@@ -89,6 +85,28 @@ func (m *MPHBlacklist) Len() int {
 
 func (m *MPHBlacklist) Open() {
 	m.builder = mph.Builder()
+}
+
+func rebuildBlacklist(m *Malicious) {
+	// Rebuild the cache for the blacklist
+	blacklist, err := buildCacheFromFile(m.Options)
+	if err != nil {
+		log.Errorf("error rebuilding blacklist: %v#", err)
+
+		if m.serverName != "" {
+			reloadsFailedCount.WithLabelValues(m.serverName).Inc()
+		}
+
+		// Don't update the existing blacklist
+	} else {
+		reloadTime := time.Now()
+		m.blacklist = blacklist
+		m.lastReloadTime = reloadTime
+	}
+	if m.serverName != "" {
+		blacklistSize.WithLabelValues(m.serverName).Set(float64(m.blacklist.Len()))
+	}
+
 }
 
 func buildCacheFromFile(options PluginOptions) (Blacklist, error) {
