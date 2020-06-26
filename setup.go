@@ -56,13 +56,24 @@ func setup(c *caddy.Controller) error {
 	q := make(chan bool)
 	m := Malicious{blacklist: blacklist, lastReloadTime: reloadTime, Options: options, quit: q}
 
-	tick := time.NewTicker(options.ReloadPeriod)
-	reloadHook(&m, tick)
+	var tick *time.Ticker
+	{
+		// If our ReloadPeriod is configured, set up the reload hook
+		if options.ReloadPeriod > 0*time.Second {
+			tick = time.NewTicker(options.ReloadPeriod)
+			reloadHook(&m, tick)
+		}
+	}
 
 	c.OnFinalShutdown(func() error {
 		// log.Info("Final Shutdown")
-		tick.Stop()
-		m.quit <- true
+
+		// If our ReloadPeriod is configured, tear down the reload hook
+		if options.ReloadPeriod > 0*time.Second {
+			tick.Stop()
+			m.quit <- true
+		}
+
 		return nil
 	})
 
