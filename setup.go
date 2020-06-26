@@ -56,12 +56,11 @@ func setup(c *caddy.Controller) error {
 	q := make(chan bool)
 	m := Malicious{blacklist: blacklist, lastReloadTime: reloadTime, Options: options, quit: q}
 
-	// tick := time.NewTicker(time.Second * 30)
 	tick := time.NewTicker(options.ReloadPeriod)
 	reloadHook(&m, tick)
 
 	c.OnFinalShutdown(func() error {
-		log.Info("Final Shutdown")
+		// log.Info("Final Shutdown")
 		tick.Stop()
 		m.quit <- true
 		return nil
@@ -76,33 +75,18 @@ func setup(c *caddy.Controller) error {
 	return nil
 }
 
-func reloadHook(e *Malicious, tick *time.Ticker) { //, quit chan bool) {
-	log.Info("reload called")
-	//quit := e.quit
-	// defer close(e.quit)
-	// defer tick.Stop()
+func reloadHook(e *Malicious, tick *time.Ticker) {
 	go func() {
-		// tick := time.NewTicker(time.Second * 5)
-		// defer tick.Stop()
-		log.Info("func called")
-		// count := 0
 		for {
-			log.Info("loop iteration")
+			// log.Info("loop iteration")
 			select {
 			case <-tick.C:
-				log.Info("Hook ticked")
-
-				// count++
-				// if count > 5 {
-				// 	log.Info("Sending quit to hook")
-				// 	e.quit <- true
-				// 	// break
-				// }
+				// log.Info("Hook ticked")
 
 				rebuildBlacklist(e)
 
 			case <-e.quit:
-				log.Info("Stopping hook")
+				// log.Info("Stopping hook")
 				tick.Stop()
 				return
 			}

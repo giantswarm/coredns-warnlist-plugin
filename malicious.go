@@ -33,15 +33,6 @@ type Malicious struct {
 // in a Server.
 func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 
-	// Debug log that we've have seen the query. This will only be shown when the debug plugin is loaded.
-	log.Debug("Received response")
-
-	// For now, rebuild the blacklist if we get a new request after our reload period
-	// This should be made asynchronous in the future so as not to block requests
-	// if time.Since(e.lastReloadTime) >= e.Options.ReloadPeriod {
-	// 	e.reloadBlacklist(ctx)
-	// }
-
 	req := request.Request{W: w, Req: r}
 
 	if e.blacklist != nil {
@@ -53,6 +44,7 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		blacklistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
 
 		if hit {
+			// Warn and increment the counter for the hit
 			blacklistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
 			log.Warning("host ", req.IP(), " requested blacklisted domain: ", req.Name())
 		}
@@ -77,23 +69,6 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	return plugin.NextOrFailure(e.Name(), e.Next, ctx, pw, r)
 }
 
-// func (e *Malicious) reloadBlacklist(ctx context.Context) {
-// 	newBlacklist, err := buildCacheFromFile(e.Options)
-// 	if err != nil {
-// 		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
-// 			// Special case where there are 2^n objects in the mph blacklist
-// 			log.Error("error rebuilding blacklist: number of items must not be a power of 2 (sorry)")
-// 		} else {
-// 			log.Error("error rebuilding blacklist: ", err)
-// 		}
-// 		reloadsFailedCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-// 	} else {
-// 		e.blacklist = newBlacklist
-// 		e.lastReloadTime = time.Now()
-// 		log.Info("updated blacklist")
-// 	}
-// }
-
 // Name implements the Handler interface.
 func (e Malicious) Name() string { return "malicious" }
 
@@ -109,7 +84,6 @@ func NewResponsePrinter(w dns.ResponseWriter) *ResponsePrinter {
 
 // WriteMsg calls the underlying ResponseWriter's WriteMsg method and handles our future response logic.
 func (r *ResponsePrinter) WriteMsg(res *dns.Msg) error {
-	// fmt.Fprintln(out, "example2")
 	return r.ResponseWriter.WriteMsg(res)
 }
 
