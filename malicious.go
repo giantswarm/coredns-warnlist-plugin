@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/coredns/coredns/request"
@@ -26,21 +25,13 @@ type Malicious struct {
 	blacklist      Blacklist
 	lastReloadTime time.Time
 	Options        PluginOptions
-	// quit           chan bool
+	serverName     string
+	quit           chan bool
 }
 
 // ServeDNS implements the plugin.Handler interface. This method gets called when malicious is used
 // in a Server.
 func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
-
-	// Debug log that we've have seen the query. This will only be shown when the debug plugin is loaded.
-	log.Debug("Received response")
-
-	// For now, rebuild the blacklist if we get a new request after our reload period
-	// This should be made asynchronous in the future so as not to block requests
-	if time.Since(e.lastReloadTime) >= e.Options.ReloadPeriod {
-		e.reloadBlacklist(ctx)
-	}
 
 	req := request.Request{W: w, Req: r}
 
@@ -48,10 +39,12 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		// See if the requested domain is in the cache
 		retrievalStart := time.Now()
 		hit := e.blacklist.Contains(req.Name())
+
 		// Record the duration for the query
 		blacklistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
 
 		if hit {
+			// Warn and increment the counter for the hit
 			blacklistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
 			log.Warning("host ", req.IP(), " requested blacklisted domain: ", req.Name())
 		}
@@ -64,28 +57,16 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(0))
 	}
 
+	// Update the server name from context if it has changed
+	if metrics.WithServer(ctx) != e.serverName {
+		e.serverName = metrics.WithServer(ctx)
+	}
+
 	// Wrap the response when it returns from the next plugin
 	pw := NewResponsePrinter(w)
 
 	// Call next plugin (if any).
 	return plugin.NextOrFailure(e.Name(), e.Next, ctx, pw, r)
-}
-
-func (e *Malicious) reloadBlacklist(ctx context.Context) {
-	newBlacklist, err := buildCacheFromFile(e.Options)
-	if err != nil {
-		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
-			// Special case where there are 2^n objects in the mph blacklist
-			log.Error("error rebuilding blacklist: number of items must not be a power of 2 (sorry)")
-		} else {
-			log.Error("error rebuilding blacklist: ", err)
-		}
-		reloadsFailedCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-	} else {
-		e.blacklist = newBlacklist
-		e.lastReloadTime = time.Now()
-		log.Info("updated blacklist")
-	}
 }
 
 // Name implements the Handler interface.
@@ -103,7 +84,6 @@ func NewResponsePrinter(w dns.ResponseWriter) *ResponsePrinter {
 
 // WriteMsg calls the underlying ResponseWriter's WriteMsg method and handles our future response logic.
 func (r *ResponsePrinter) WriteMsg(res *dns.Msg) error {
-	// fmt.Fprintln(out, "example2")
 	return r.ResponseWriter.WriteMsg(res)
 }
 

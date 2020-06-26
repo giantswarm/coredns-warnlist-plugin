@@ -39,10 +39,6 @@ func setup(c *caddy.Controller) error {
 		return err
 	}
 
-	// TODO: Make reload async
-	// e := Malicious{blacklist: blacklist, lastReloadTime: time.Now(), quit: make(chan bool)}
-	// reloadHook(&e)
-
 	// Add a startup function that will -- after all plugins have been loaded -- check if the
 	// prometheus plugin has been used - if so we will export metrics. We can only register
 	// this metric once, hence the "once.Do".
@@ -56,18 +52,46 @@ func setup(c *caddy.Controller) error {
 		return nil
 	})
 
-	// c.OnFinalShutdown(func() error {
-	// 	e.quit <- true
-	// 	return nil
-	// })
-
 	// Add the Plugin to CoreDNS, so Servers can use it in their plugin chain.
+	q := make(chan bool)
+	m := Malicious{blacklist: blacklist, lastReloadTime: reloadTime, Options: options, quit: q}
+
+	tick := time.NewTicker(options.ReloadPeriod)
+	reloadHook(&m, tick)
+
+	c.OnFinalShutdown(func() error {
+		// log.Info("Final Shutdown")
+		tick.Stop()
+		m.quit <- true
+		return nil
+	})
+
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		return &Malicious{Next: next, blacklist: blacklist, lastReloadTime: reloadTime, Options: options}
+		m.Next = next
+		return &m
 	})
 
 	// All OK, return a nil error.
 	return nil
+}
+
+func reloadHook(e *Malicious, tick *time.Ticker) {
+	go func() {
+		for {
+			// log.Info("loop iteration")
+			select {
+			case <-tick.C:
+				// log.Info("Hook ticked")
+
+				rebuildBlacklist(e)
+
+			case <-e.quit:
+				// log.Info("Stopping hook")
+				tick.Stop()
+				return
+			}
+		}
+	}()
 }
 
 func parseArguments(c *caddy.Controller) (PluginOptions, error) {
@@ -147,26 +171,3 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 
 	return nil
 }
-
-// TODO: Make reload asynchronous
-// func reloadHook(e *Malicious) {
-// 	go func() {
-// 		tick := time.NewTicker(time.Second * 5)
-// 		count := 0
-// 		for {
-// 			select {
-// 			case <-e.quit:
-// 				log.Info("Stopping hook")
-// 				return
-
-// 			case <-tick.C:
-// 				log.Info("Hook ticked")
-// 				count++
-// 				if count > 5 {
-// 					e.quit <- true
-// 					break
-// 				}
-// 			}
-// 		}
-// 	}()
-// }
