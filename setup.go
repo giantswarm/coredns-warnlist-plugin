@@ -39,10 +39,6 @@ func setup(c *caddy.Controller) error {
 		return err
 	}
 
-	// TODO: Make reload async
-	// e := Malicious{blacklist: blacklist, lastReloadTime: time.Now(), quit: make(chan bool)}
-	// reloadHook(&e)
-
 	// Add a startup function that will -- after all plugins have been loaded -- check if the
 	// prometheus plugin has been used - if so we will export metrics. We can only register
 	// this metric once, hence the "once.Do".
@@ -62,12 +58,64 @@ func setup(c *caddy.Controller) error {
 	// })
 
 	// Add the Plugin to CoreDNS, so Servers can use it in their plugin chain.
+	q := make(chan bool)
+	m := Malicious{blacklist: blacklist, lastReloadTime: reloadTime, Options: options, quit: q}
+
+	tick := time.NewTicker(time.Second * 30)
+	reloadHook(&m, tick)
+
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		return &Malicious{Next: next, blacklist: blacklist, lastReloadTime: reloadTime, Options: options}
+		m.Next = next
+		return &m
 	})
 
 	// All OK, return a nil error.
 	return nil
+}
+
+func reloadHook(e *Malicious, tick *time.Ticker) { //, quit chan bool) {
+	log.Info("reload called")
+	//quit := e.quit
+	// defer close(e.quit)
+	// defer tick.Stop()
+	go func() {
+		// tick := time.NewTicker(time.Second * 5)
+		// defer tick.Stop()
+		log.Info("func called")
+		count := 0
+		for {
+			log.Info("loop iteration")
+			select {
+			case <-tick.C:
+				log.Info("Hook ticked")
+
+				count++
+				if count > 2 {
+					log.Info("Sending quit to hook")
+					e.quit <- true
+					// break
+				}
+
+				// Rebuild the cache for the blacklist
+				blacklist, err := buildCacheFromFile(e.Options)
+				if err != nil {
+					log.Errorf("error rebuilding blacklist: %v#", err)
+					// reloadsFailedCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+					// Don't update the existing blacklist
+				} else {
+					reloadTime := time.Now()
+					e.blacklist = blacklist
+					e.lastReloadTime = reloadTime
+				}
+
+				// blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(e.blacklist.Len()))
+
+			case <-e.quit:
+				log.Info("Stopping hook")
+				return
+			}
+		}
+	}()
 }
 
 func parseArguments(c *caddy.Controller) (PluginOptions, error) {
