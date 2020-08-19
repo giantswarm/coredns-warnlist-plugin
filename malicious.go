@@ -31,14 +31,14 @@ type Malicious struct {
 
 // ServeDNS implements the plugin.Handler interface. This method gets called when malicious is used
 // in a Server.
-func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+func (m *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 
 	req := request.Request{W: w, Req: r}
 
-	if e.blacklist != nil {
+	if m.blacklist != nil {
 		// See if the requested domain is in the cache
 		retrievalStart := time.Now()
-		hit := e.blacklist.Contains(req.Name())
+		hit := m.blacklist.Contains(req.Name())
 
 		// Record the duration for the query
 		blacklistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
@@ -50,7 +50,7 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		}
 
 		// Update the current blacklist size metric
-		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(e.blacklist.Len()))
+		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(m.blacklist.Len()))
 	} else {
 		log.Warning("no blacklist has been loaded")
 		// Update the current blacklist size metric to 0
@@ -58,19 +58,19 @@ func (e *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	}
 
 	// Update the server name from context if it has changed
-	if metrics.WithServer(ctx) != e.serverName {
-		e.serverName = metrics.WithServer(ctx)
+	if metrics.WithServer(ctx) != m.serverName {
+		m.serverName = metrics.WithServer(ctx)
 	}
 
 	// Wrap the response when it returns from the next plugin
 	pw := NewResponsePrinter(w)
 
 	// Call next plugin (if any).
-	return plugin.NextOrFailure(e.Name(), e.Next, ctx, pw, r)
+	return plugin.NextOrFailure(m.Name(), m.Next, ctx, pw, r)
 }
 
 // Name implements the Handler interface.
-func (e Malicious) Name() string { return "malicious" }
+func (m Malicious) Name() string { return "malicious" }
 
 // ResponsePrinter wraps a dns.ResponseWriter and will let the plugin inspect the response.
 type ResponsePrinter struct {
