@@ -86,7 +86,7 @@ func setup(c *caddy.Controller) error {
 	return nil
 }
 
-func reloadHook(e *Malicious, tick *time.Ticker) {
+func reloadHook(m *Malicious, tick *time.Ticker) {
 	go func() {
 		for {
 			// log.Info("loop iteration")
@@ -94,9 +94,9 @@ func reloadHook(e *Malicious, tick *time.Ticker) {
 			case <-tick.C:
 				// log.Info("Hook ticked")
 
-				rebuildBlacklist(e)
+				rebuildBlacklist(m)
 
-			case <-e.quit:
+			case <-m.quit:
 				// log.Info("Stopping hook")
 				tick.Stop()
 				return
