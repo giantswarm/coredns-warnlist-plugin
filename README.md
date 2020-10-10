@@ -2,7 +2,9 @@
 
 ## Description
 
-CoreDNS plugin which periodically updates a cache of blacklisted domains, and exposes metrics and logs when a prohibited domain is requested.
+CoreDNS plugin which periodically updates a cache of malicious domains, and exposes metrics and logs when a prohibited domain is requested. It does not block the request.
+
+**This project is under development and has not been tested for heavy production workloads.**
 
 ## Arguments
 
