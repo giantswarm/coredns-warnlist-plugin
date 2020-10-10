@@ -2,7 +2,9 @@
 
 ## Description
 
-CoreDNS plugin which periodically updates a cache of blacklisted domains, and exposes metrics and logs when a prohibited domain is requested.
+CoreDNS plugin which periodically updates a cache of malicious domains, and exposes metrics and logs when a prohibited domain is requested. It does not block the request.
+
+**This project is under development and has not been tested for heavy production workloads.**
 
 ## Arguments
 
@@ -78,7 +80,7 @@ onlydanger.us
 
 This plugin must be compiled with `coredns` -- it cannot be added to an existing `coredns` binary or Docker image.
 
-A simple way to consume this plugin, is by adding the following on [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg), and recompile it as [detailed on coredns.io](https://coredns.io/2017/07/25/compile-time-enabling-or-disabling-plugins/#build-with-compile-time-configuration-file).
+A simple way to consume this plugin is by adding the following to [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg) and recompiling it as [detailed on coredns.io](https://coredns.io/2017/07/25/compile-time-enabling-or-disabling-plugins/#build-with-compile-time-configuration-file).
 
 ~~~
 ...
