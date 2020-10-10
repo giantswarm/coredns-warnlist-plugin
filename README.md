@@ -80,7 +80,7 @@ onlydanger.us
 
 This plugin must be compiled with `coredns` -- it cannot be added to an existing `coredns` binary or Docker image.
 
-A simple way to consume this plugin, is by adding the following on [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg), and recompile it as [detailed on coredns.io](https://coredns.io/2017/07/25/compile-time-enabling-or-disabling-plugins/#build-with-compile-time-configuration-file).
+A simple way to consume this plugin is by adding the following to [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg) and recompiling it as [detailed on coredns.io](https://coredns.io/2017/07/25/compile-time-enabling-or-disabling-plugins/#build-with-compile-time-configuration-file).
 
 ~~~
 ...
