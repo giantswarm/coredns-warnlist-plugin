@@ -35,7 +35,8 @@ func domainsFromSource(source string, sourceType string, sourceFormat string) ch
 			} else if sourceType == DomainSourceTypeURL {
 				// TODO
 				log.Infof("Loading from URL: %s", source)
-				resp, err := http.Get(source)
+				// Load the domain list from the URL
+				resp, err := http.Get(source) // nolint: gosec
 				if err != nil {
 					log.Error(err)
 				}
