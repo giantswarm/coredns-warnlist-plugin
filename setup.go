@@ -5,7 +5,6 @@ import (
 
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
-	"github.com/coredns/coredns/plugin/metrics"
 
 	"github.com/caddyserver/caddy"
 )
@@ -38,19 +37,6 @@ func setup(c *caddy.Controller) error {
 		// Require the first build to succeed
 		return err
 	}
-
-	// Add a startup function that will -- after all plugins have been loaded -- check if the
-	// prometheus plugin has been used - if so we will export metrics. We can only register
-	// this metric once, hence the "once.Do".
-	c.OnStartup(func() error {
-		once.Do(func() {
-			metrics.MustRegister(c, blacklistCount)
-			metrics.MustRegister(c, reloadsFailedCount)
-			metrics.MustRegister(c, blacklistCheckDuration)
-			metrics.MustRegister(c, blacklistSize)
-		})
-		return nil
-	})
 
 	// Add the Plugin to CoreDNS, so Servers can use it in their plugin chain.
 	q := make(chan bool)
