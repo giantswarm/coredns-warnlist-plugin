@@ -1,8 +1,6 @@
 package malicious
 
 import (
-	"sync"
-
 	"github.com/coredns/coredns/plugin"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -36,5 +34,3 @@ var reloadsFailedCount = promauto.NewCounterVec(prometheus.CounterOpts{
 	Name:      "malicious_domains_failed_reloads_count",
 	Help:      "Counter of the number of times the plugin has failed to reload its blacklist.",
 }, []string{"server"})
-
-var once sync.Once
