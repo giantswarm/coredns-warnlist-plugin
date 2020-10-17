@@ -28,7 +28,10 @@ func TestMalicious(t *testing.T) {
 	rec := dnstest.NewRecorder(&test.ResponseWriter{})
 
 	// Call our plugin directly, and check the result.
-	x.ServeDNS(ctx, rec, r)
+	_, err := x.ServeDNS(ctx, rec, r)
+	if err != nil {
+		t.Fatalf("Error serving DNS: %v", err)
+	}
 	if a := b.String(); a != "example\n" {
 		t.Errorf("Failed to print '%s', got %s", "example", a)
 	}
