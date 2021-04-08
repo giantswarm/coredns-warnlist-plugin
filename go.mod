@@ -13,3 +13,5 @@ require (
 )
 
 replace github.com/gorilla/websocket v1.4.0 => github.com/gorilla/websocket v1.4.2
+
+replace github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
