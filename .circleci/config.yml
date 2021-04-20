@@ -9,13 +9,11 @@ jobs:
       - image: golang:1.14
     steps:
       - run: git clone https://github.com/coredns/coredns.git
-      - run: ls coredns
       - checkout:
           path: plugin
-      - run: ls plugin
       - run: ./plugin/patch-plugin.sh coredns plugin
       - run: cd coredns && make
-      - run: ls coredns
+      - run: ./coredns -version
       - save_cache:
           paths: 
             - coredns
@@ -31,3 +29,14 @@ workflows:
             tags:
               only: /^v.*/
       - build-binary
+      - architect/push-to-docker:
+          image: quay.io/giantswarm/coredn-malicious-domain-plugin
+          username_envvar: "QUAY_USERNAME"
+          password_envvar: "QUAY_PASSWORD"
+          requires:
+            - go-test
+            - build-binary
+          filters:
+            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
