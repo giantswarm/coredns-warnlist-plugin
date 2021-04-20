@@ -34,7 +34,7 @@ workflows:
               only: /^v.*/
       - build-binary
       - architect/push-to-docker:
-          image: quay.io/giantswarm/coredn-malicious-domain-plugin
+          image: quay.io/giantswarm/coredns-malicious-domain-plugin
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
           requires:
