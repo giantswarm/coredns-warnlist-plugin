@@ -8,10 +8,11 @@ jobs:
     docker:
       - image: golang:1.14
     steps:
-      - checkout
-      - run: ls
       - run: git clone https://github.com/coredns/coredns.git
-      - run: ls
+      - run: ls coredns
+      - checkout:
+        path: plugin
+      - run: ls plugin
 
 workflows:
   test:
