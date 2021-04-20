@@ -7,11 +7,17 @@ jobs:
   build-binary:
     docker:
       - image: quay.io/giantswarm/golang:1.14.15
+    parameters:
+      coredns_reference:
+        description: "The version/reference of CoreDNS to build with this plugin."
+        default: "master"
+        type: string
     steps:
-      - run: git clone https://github.com/coredns/coredns.git
+      - run: git clone https://github.com/coredns/coredns.git      
       - checkout:
           path: plugin
       - run: ./plugin/patch-plugin.sh coredns plugin
+      - run: cd coredns && git checkout << parameters.coredns_reference >>
       - run: cd coredns && make
       - run: ./coredns/coredns -version
       - persist_to_workspace:
