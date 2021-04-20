@@ -33,8 +33,16 @@ jobs:
           name: Building CoreDNS binary
 
       - run: 
-          command: mv ./coredns/coredns /
+          command: mv ./coredns/coredns ./coredns-binary
           name: Moving CoreDNS binary
+        
+      - run: 
+          command: rm -rf ./coredns/coredns
+          name: Removing CoreDNS repo
+
+      - run: 
+          command: mv ./coredns-binary ./coredns
+          name: Restoring CoreDNS binary
 
       - run: 
           command: /coredns -version
@@ -43,7 +51,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - /coredns
+            - coredns
 
 workflows:
   test:
