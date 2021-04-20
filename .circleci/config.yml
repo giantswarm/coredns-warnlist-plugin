@@ -33,13 +33,17 @@ jobs:
           name: Building CoreDNS binary
 
       - run: 
-          command: ./coredns/coredns -version
+          command: mv ./coredns/coredns /
+          name: Moving CoreDNS binary
+
+      - run: 
+          command: /coredns -version
           name: Printing CoreDNS version
 
       - persist_to_workspace:
           root: .
           paths:
-            - ./coredns/coredns
+            - /coredns
 
 workflows:
   test:
@@ -53,7 +57,7 @@ workflows:
 
       - build-binary:
           coredns_reference: "v1.8.3"
-          
+
       - architect/push-to-docker:
           image: quay.io/giantswarm/coredns-malicious-domain-plugin
           username_envar: "QUAY_USERNAME"
