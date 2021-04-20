@@ -6,7 +6,7 @@ import (
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
 
-	"github.com/caddyserver/caddy"
+	"github.com/coredns/caddy"
 )
 
 // PluginOptions stores the configuration options given in the corefile

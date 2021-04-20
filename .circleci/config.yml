@@ -3,11 +3,76 @@ version: 2.1
 orbs:
   architect: giantswarm/architect@2.7.0
 
+jobs:
+  build-binary:
+    docker:
+      - image: quay.io/giantswarm/golang:1.14.15
+    parameters:
+      coredns_reference:
+        description: "The version/reference of CoreDNS to build with this plugin."
+        default: "master"
+        type: string
+    steps:
+      - run: 
+          command: git clone https://github.com/coredns/coredns.git
+          name: Cloning CoreDNS repository
+
+      - run: 
+          command: cd coredns && git checkout << parameters.coredns_reference >>
+          name: Checking out reference
+
+      - checkout:
+          path: plugin
+
+      - run: 
+          command: ./plugin/patch-plugin.sh coredns plugin
+          name: Patching CoreDNS plugin manifest
+
+      - run: 
+          command: cd coredns && make
+          name: Building CoreDNS binary
+
+      - run: 
+          command: mv ./coredns/coredns ./coredns-binary
+          name: Moving CoreDNS binary
+        
+      - run: 
+          command: rm -rf ./coredns
+          name: Removing CoreDNS repo
+
+      - run: 
+          command: mv coredns-binary coredns
+          name: Restoring CoreDNS binary
+
+      - run: 
+          command: ./coredns -version
+          name: Printing CoreDNS version
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - coredns
+
 workflows:
   test:
     jobs:
       - architect/go-test:
           name: go-test
+          filters:
+            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
+
+      - build-binary:
+          coredns_reference: "v1.8.3"
+
+      - architect/push-to-docker:
+          image: quay.io/giantswarm/coredns-malicious-domain-plugin
+          username_envar: "QUAY_USERNAME"
+          password_envar: "QUAY_PASSWORD"
+          requires:
+            - go-test
+            - build-binary
           filters:
             # Trigger job also on git tag.
             tags:
