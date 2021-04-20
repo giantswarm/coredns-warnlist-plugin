@@ -13,7 +13,7 @@ jobs:
           path: plugin
       - run: ./plugin/patch-plugin.sh coredns plugin
       - run: cd coredns && make
-      - run: ./coredns -version
+      - run: ./coredns/coredns -version
       - save_cache:
           paths: 
             - coredns
