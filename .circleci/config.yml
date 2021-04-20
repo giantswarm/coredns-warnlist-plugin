@@ -34,7 +34,7 @@ workflows:
             # Trigger job also on git tag.
             tags:
               only: /^v.*/
-      - build-binary
+      - build-binary:
           coredns_reference: "v1.8.3"
       - architect/push-to-docker:
           image: quay.io/giantswarm/coredns-malicious-domain-plugin
