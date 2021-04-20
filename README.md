@@ -6,6 +6,12 @@ CoreDNS plugin which periodically updates a cache of malicious domains, and expo
 
 **This project is under development and has not been tested for heavy production workloads.**
 
+## Usage
+
+We host a coredns image including this plugin at `quay.io/giantswarm/coredns-malicious-domain-plugin`. While we will try to keep this up to date on a best-effort basis, this is not an official image and may become behind or out of sync with the official image.
+
+Alternatively, you can build an image yourself from the upstream codebase using the instructions in the **Compilation** section below.
+
 ## Arguments
 
 The `malicious` plugin takes 4 arguments:

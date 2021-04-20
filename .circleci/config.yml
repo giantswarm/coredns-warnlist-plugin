@@ -13,13 +13,29 @@ jobs:
         default: "master"
         type: string
     steps:
-      - run: git clone https://github.com/coredns/coredns.git      
+      - run: 
+          command: git clone https://github.com/coredns/coredns.git
+          name: Cloning CoreDNS repository
+
+      - run: 
+          command: cd coredns && git checkout << parameters.coredns_reference >>
+          name: Checking out reference
+
       - checkout:
           path: plugin
-      - run: ./plugin/patch-plugin.sh coredns plugin
-      - run: cd coredns && git checkout << parameters.coredns_reference >>
-      - run: cd coredns && make
-      - run: ./coredns/coredns -version
+
+      - run: 
+          command: ./plugin/patch-plugin.sh coredns plugin
+          name: Patching CoreDNS plugin manifest
+
+      - run: 
+          command: cd coredns && make
+          name: Building CoreDNS binary
+
+      - run: 
+          command: ./coredns/coredns -version
+          name: Printing CoreDNS version
+
       - persist_to_workspace:
           root: .
           paths:
@@ -34,8 +50,10 @@ workflows:
             # Trigger job also on git tag.
             tags:
               only: /^v.*/
+
       - build-binary:
           coredns_reference: "v1.8.3"
+          
       - architect/push-to-docker:
           image: quay.io/giantswarm/coredns-malicious-domain-plugin
           username_envar: "QUAY_USERNAME"
