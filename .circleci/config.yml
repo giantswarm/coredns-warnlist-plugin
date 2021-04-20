@@ -45,7 +45,7 @@ jobs:
           name: Restoring CoreDNS binary
 
       - run: 
-          command: /coredns -version
+          command: ./coredns -version
           name: Printing CoreDNS version
 
       - persist_to_workspace:
