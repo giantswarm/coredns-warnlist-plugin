@@ -18,6 +18,10 @@ jobs:
           paths: 
             - coredns
           key: coredns-binary
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./coredns/coredns
 
 workflows:
   test:
