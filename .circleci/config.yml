@@ -10,7 +10,8 @@ jobs:
     steps:
       - run: git clone https://github.com/coredns/coredns.git
       - run: ls coredns
-      - checkout: plugin
+      - checkout:
+          path: plugin
       - run: ls plugin
 
 workflows:
