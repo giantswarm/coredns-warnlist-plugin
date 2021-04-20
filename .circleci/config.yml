@@ -3,6 +3,16 @@ version: 2.1
 orbs:
   architect: giantswarm/architect@2.7.0
 
+jobs:
+  build-binary:
+    docker:
+      - image: golang:1.14
+    steps:
+      - checkout
+      - run: ls
+      - run: git clone https://github.com/coredns/coredns.git
+      - run: ls
+
 workflows:
   test:
     jobs:
@@ -12,3 +22,4 @@ workflows:
             # Trigger job also on git tag.
             tags:
               only: /^v.*/
+      - build-binary
