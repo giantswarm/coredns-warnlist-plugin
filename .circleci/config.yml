@@ -37,11 +37,11 @@ jobs:
           name: Moving CoreDNS binary
         
       - run: 
-          command: rm -rf ./coredns/coredns
+          command: rm -rf ./coredns
           name: Removing CoreDNS repo
 
       - run: 
-          command: mv ./coredns-binary ./coredns
+          command: mv coredns-binary coredns
           name: Restoring CoreDNS binary
 
       - run: 
