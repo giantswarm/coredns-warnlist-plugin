@@ -14,4 +14,6 @@ require (
 
 replace github.com/gorilla/websocket v1.4.0 => github.com/gorilla/websocket v1.4.2
 
+replace github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
+
 replace github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
