@@ -8,7 +8,7 @@ require (
 	github.com/coredns/caddy v1.1.0
 	github.com/coredns/coredns v1.8.3
 	github.com/google/go-cmp v0.5.2
-	github.com/miekg/dns v1.1.38
+	github.com/miekg/dns v1.1.41
 	github.com/prometheus/client_golang v1.9.0
 )
 
