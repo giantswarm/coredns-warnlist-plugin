@@ -187,5 +187,5 @@ func jitter(t time.Duration) time.Duration {
 	minDuration := t - maxJitter
 
 	// Set the final duration to the min + a random duration between 0 and our max jitter.
-	return minDuration + time.Duration(rand.Int63n(int64(maxJitter)))
+	return minDuration + time.Duration(rand.Int63n(int64(maxJitter))) // nolint:gosec // rand not used for crypto.
 }
