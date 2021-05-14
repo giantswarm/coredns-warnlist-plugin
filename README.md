@@ -150,7 +150,7 @@ Sample Corefile
     log
     malicious {
         url https://urlhaus.abuse.ch/downloads/hostfile/ hostfile
-        reload 5m
+        reload 60m
     }
     prometheus
     forward . /etc/resolv.conf
