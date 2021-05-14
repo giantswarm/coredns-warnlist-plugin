@@ -1,6 +1,8 @@
 package malicious
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/coredns/coredns/core/dnsserver"
@@ -9,11 +11,14 @@ import (
 	"github.com/coredns/caddy"
 )
 
+const MaxJitterPercent = 30
+
 // PluginOptions stores the configuration options given in the corefile
 type PluginOptions struct {
 	DomainSource     string
 	DomainSourceType string
 	FileFormat       string
+	NoJitter         bool
 	ReloadPeriod     time.Duration
 }
 
@@ -162,9 +167,25 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 			log.Error("unable to parse reload duration")
 			return c.ArgErr()
 		}
+		t = jitter(t)
 		options.ReloadPeriod = t
 		log.Infof("Using reload period of: %s", options.ReloadPeriod)
 	}
 
 	return nil
+}
+
+func jitter(t time.Duration) time.Duration {
+	// Get the max jitter as a duration.
+	maxJitter, err := time.ParseDuration(fmt.Sprintf("%dms", t.Milliseconds()/MaxJitterPercent))
+	if err != nil {
+		log.Warningf("Failed to calculate jitter: %s", err)
+		return t
+	}
+
+	// Calcluate the minimum time we have to wait.
+	minDuration := t - maxJitter
+
+	// Set the final duration to the min + a random duration between 0 and our max jitter.
+	return minDuration + time.Duration(rand.Int63n(int64(maxJitter))) // nolint:gosec // rand not used for crypto.
 }
