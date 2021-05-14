@@ -19,7 +19,7 @@ The `malicious` plugin takes 4 arguments:
 - the source type for the blacklist: either `url` or `file`
 - the path to the source: either a url or file path
 - the format of the file to expect: either `hostfile` or `text` (see below)
-- the reload period: an optional Go Duration after which the blacklist will be regenerated*
+- the reload period: an optional Go Duration after which time (+/- 30% jitter) the blacklist will be regenerated*
 
 \* when automatically reloading from a URL, please be friendly to the service hosting the file.
 
@@ -36,7 +36,7 @@ Sample Corefile configuration snippet (URL):
 ```
     malicious {
         url https://urlhaus.abuse.ch/downloads/hostfile/ hostfile
-        reload 5m
+        reload 60m
     }
 ```
 
