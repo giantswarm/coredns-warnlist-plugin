@@ -1,6 +1,7 @@
 package malicious
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/coredns/caddy"
 )
 
-const MaxJitterPercent = 10
+const MaxJitterPercent = 30
 
 // PluginOptions stores the configuration options given in the corefile
 type PluginOptions struct {
@@ -175,16 +176,16 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 }
 
 func jitter(t time.Duration) time.Duration {
-	// Get the max jitter as an integer (millis)
-	jitterMillis := t.Milliseconds() / MaxJitterPercent
+	// Get the max jitter as a duration.
+	maxJitter, err := time.ParseDuration(fmt.Sprintf("%dms", t.Milliseconds()/MaxJitterPercent))
+	if err != nil {
+		log.Warningf("Failed to calculate jitter: %s", err)
+		return t
+	}
 
-	// Get the minimum time after jittering
-	minPeriod := t - time.Duration(jitterMillis)
+	// Calcluate the minimum time we have to wait.
+	minDuration := t - maxJitter
 
-	// Set actual jitter in the range [0, 2*jitterMillis).
-	// We already subtracted the max jitter above, so we use 2 * jitter here
-	jitter := rand.Intn(int(2 * jitterMillis))
-
-	// Construct the final duration by adding our minimum duration to our random jitter
-	return time.Duration(int(minPeriod.Milliseconds()) + jitter)
+	// Set the final duration to the min + a random duration between 0 and our max jitter.
+	return minDuration + time.Duration(rand.Int63n(int64(maxJitter)))
 }
