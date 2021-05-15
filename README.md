@@ -14,12 +14,13 @@ Alternatively, you can build an image yourself from the upstream codebase using 
 
 ## Arguments
 
-The `malicious` plugin takes 4 arguments:
+The `malicious` plugin takes the following arguments:
 
 - the source type for the blacklist: either `url` or `file`
 - the path to the source: either a url or file path
 - the format of the file to expect: either `hostfile` or `text` (see below)
 - the reload period: an optional Go Duration after which time (+/- 30% jitter) the blacklist will be regenerated*
+- whether or not to match subdomains: `true` (default) or `false` (see [Subdomains](#subdomains))
 
 \* when automatically reloading from a URL, please be friendly to the service hosting the file.
 
@@ -29,6 +30,7 @@ In your Corefile, the plugin options follow the format:
     malicious {
         <source type> <source path> <file format>
         reload <reload period>
+        match_subdomains <true | false>
     }
 ```
 
@@ -45,6 +47,7 @@ Sample Corefile configuration snippet (file):
     malicious {
         file domains.txt text
         reload 5m
+        match_subdomains true
     }
 ```
 
@@ -81,6 +84,12 @@ onlydanger.us
 127.0.0.1	1sp2d.club
 127.0.0.1	1sp3d.club
 ```
+
+## Subdomains
+
+This plugin can optionally check requests for subdomains of those explicitly listed on the blacklist. For example, using a blacklist containing `very.evil`, requesting `something.very.evil` would also trigger a match.
+
+This feature (enabled by default) uses a [radix tree][iradix] to attempt to reduce the complexity of finding matches. This might affect the performance of the plugin more than the alternative Go map implementation (which can not match subdomains), but we don't yet have enough data to report how much impact can be expected.
 
 ## Compilation
 
@@ -165,3 +174,5 @@ Using the domain blacklist above, this will trigger a blacklist hit.
 ## Also See
 
 See the [manual](https://coredns.io/manual).
+
+[iradix]: https://github.com/hashicorp/go-immutable-radix/
