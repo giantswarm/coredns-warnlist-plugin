@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/alecthomas/mph"
+	iradix "github.com/hashicorp/go-immutable-radix"
 )
 
 type Blacklist interface {
@@ -21,6 +23,63 @@ func NewBlacklist() Blacklist {
 	b.Open()
 	return b
 }
+
+type RadixBlacklist struct {
+	blacklist *iradix.Tree
+}
+
+func (r *RadixBlacklist) Add(key string) {
+	// Add the domain in reverse so we can pretend it's a prefix.
+	key = reverseString(key)
+
+	b, _, _ := r.blacklist.Insert([]byte(key), 1)
+	r.blacklist = b
+}
+
+func (r *RadixBlacklist) Contains(key string) bool {
+	keyR := reverseString(key)
+
+	m, _, ok := r.blacklist.Root().LongestPrefix([]byte(keyR))
+	if !ok {
+		fmt.Printf("Could not find longest prefix for %s\n", key)
+		// TODO: Catch the normal expected miss error and log others
+	}
+	return isFullPrefixMatch(keyR, string(m))
+}
+
+func (r *RadixBlacklist) Close() error {
+	// Nothing to do to close an iradix
+	return nil
+}
+
+func (r *RadixBlacklist) Len() int {
+	return r.blacklist.Len()
+}
+
+func (r *RadixBlacklist) Open() {
+	tree := iradix.New()
+	r.blacklist = tree
+}
+
+// Shamelessly taken from https://stackoverflow.com/a/34521190
+func reverseString(s string) string {
+	size := len(s)
+	buf := make([]byte, size)
+	for start := 0; start < size; {
+		r, n := utf8.DecodeRuneInString(s[start:])
+		start += n
+		utf8.EncodeRune(buf[size-start:], r)
+	}
+	return string(buf)
+}
+
+func isFullPrefixMatch(input string, match string) bool {
+	// Either we matched the full input,
+	// or this is a subdomain, so the next character should be "."
+	return len(input) == len(match) || string(input[len(match)]) == "."
+}
+
+// Go Map
 
 type GoMapBlacklist struct {
 	blacklist map[string]struct{}
@@ -47,6 +106,8 @@ func (m *GoMapBlacklist) Len() int {
 func (m *GoMapBlacklist) Open() {
 	m.blacklist = make(map[string]struct{})
 }
+
+// MPH
 
 type MPHBlacklist struct {
 	blacklist *mph.CHD
