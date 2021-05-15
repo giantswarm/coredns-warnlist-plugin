@@ -19,7 +19,6 @@ type PluginOptions struct {
 	DomainSource     string
 	DomainSourceType string
 	FileFormat       string
-	NoJitter         bool
 	MatchSubdomains  bool
 	ReloadPeriod     time.Duration
 }
