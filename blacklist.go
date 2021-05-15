@@ -24,6 +24,12 @@ func NewBlacklist() Blacklist {
 	return b
 }
 
+func NewRadixBlacklist() Blacklist {
+	b := &RadixBlacklist{}
+	b.Open()
+	return b
+}
+
 type RadixBlacklist struct {
 	blacklist *iradix.Tree
 }
@@ -41,8 +47,7 @@ func (r *RadixBlacklist) Contains(key string) bool {
 
 	m, _, ok := r.blacklist.Root().LongestPrefix([]byte(keyR))
 	if !ok {
-		fmt.Printf("Could not find longest prefix for %s\n", key)
-		// TODO: Catch the normal expected miss error and log others
+		return false
 	}
 	return isFullPrefixMatch(keyR, string(m))
 }
