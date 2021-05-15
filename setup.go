@@ -103,6 +103,9 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 
 	options := PluginOptions{}
 
+	// Match subdomains by default
+	options.MatchSubdomains = true
+
 	for c.NextBlock() {
 		if err := parseBlock(c, &options); err != nil {
 			return options, err
