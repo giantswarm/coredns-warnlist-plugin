@@ -3,6 +3,7 @@ package malicious
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/coredns/coredns/core/dnsserver"
@@ -19,6 +20,7 @@ type PluginOptions struct {
 	DomainSourceType string
 	FileFormat       string
 	NoJitter         bool
+	MatchSubdomains  bool
 	ReloadPeriod     time.Duration
 }
 
@@ -141,6 +143,22 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 		}
 		options.FileFormat = c.Val()
 		log.Infof("Using domain blacklist file: %s with format %s", options.DomainSource, options.FileFormat)
+
+	case "match_subdomains":
+		if !c.NextArg() {
+			return c.ArgErr()
+		}
+		matchBool, err := strconv.ParseBool(c.Val())
+		if err != nil {
+			log.Error("unable to parse match_subdomain setting (must be true or false")
+			return c.ArgErr()
+		}
+		options.MatchSubdomains = matchBool
+		if options.MatchSubdomains {
+			log.Infof("matching subdomains")
+		} else {
+			log.Infof("not matching subdomains")
+		}
 
 	case "url":
 		if !c.NextArg() {

@@ -66,24 +66,6 @@ func (r *RadixBlacklist) Open() {
 	r.blacklist = tree
 }
 
-// Shamelessly taken from https://stackoverflow.com/a/34521190
-func reverseString(s string) string {
-	size := len(s)
-	buf := make([]byte, size)
-	for start := 0; start < size; {
-		r, n := utf8.DecodeRuneInString(s[start:])
-		start += n
-		utf8.EncodeRune(buf[size-start:], r)
-	}
-	return string(buf)
-}
-
-func isFullPrefixMatch(input string, match string) bool {
-	// Either we matched the full input,
-	// or this is a subdomain, so the next character should be "."
-	return len(input) == len(match) || string(input[len(match)]) == "."
-}
-
 // Go Map
 
 type GoMapBlacklist struct {
@@ -153,6 +135,45 @@ func (m *MPHBlacklist) Open() {
 	m.builder = mph.Builder()
 }
 
+func buildCacheFromFile(options PluginOptions) (Blacklist, error) {
+	// Print a log message with the time it took to build the cache
+	defer logTime("Building blacklist cache took %s", time.Now())
+
+	var blacklist Blacklist
+	{
+		if options.MatchSubdomains {
+			blacklist = NewRadixBlacklist()
+		} else {
+			blacklist = NewBlacklist()
+		}
+	}
+
+	for domain := range domainsFromSource(options.DomainSource, options.DomainSourceType, options.FileFormat) {
+		blacklist.Add(domain)
+	}
+
+	err := blacklist.Close()
+	if err == nil {
+		log.Infof("added %d domains to blacklist", blacklist.Len())
+	}
+
+	return blacklist, err
+}
+
+// isFullPrefixMatch is a radix helper to determine if the prefix match is valid.
+func isFullPrefixMatch(input string, match string) bool {
+	// Either we matched the full input,
+	// or this is a subdomain, so the next character should be "."
+	return len(input) == len(match) || string(input[len(match)]) == "."
+}
+
+// Prints the elapsed time in the pre-formatted message
+func logTime(msg string, since time.Time) {
+	elapsed := time.Since(since)
+	msg = fmt.Sprintf(msg, elapsed)
+	log.Info(msg)
+}
+
 func rebuildBlacklist(m *Malicious) {
 	// Rebuild the cache for the blacklist
 	blacklist, err := buildCacheFromFile(m.Options)
@@ -175,26 +196,16 @@ func rebuildBlacklist(m *Malicious) {
 
 }
 
-func buildCacheFromFile(options PluginOptions) (Blacklist, error) {
-	// Print a log message with the time it took to build the cache
-	defer logTime("Building blacklist cache took %s", time.Now())
-
-	blacklist := NewBlacklist()
-	for domain := range domainsFromSource(options.DomainSource, options.DomainSourceType, options.FileFormat) {
-		blacklist.Add(domain)
+// reverseString returns a reversed representation of the input, including unicode.
+// Shamelessly taken from https://stackoverflow.com/a/34521190
+func reverseString(s string) string {
+	// It may be necessary to handle punycode in here at some point.
+	size := len(s)
+	buf := make([]byte, size)
+	for start := 0; start < size; {
+		r, n := utf8.DecodeRuneInString(s[start:])
+		start += n
+		utf8.EncodeRune(buf[size-start:], r)
 	}
-
-	err := blacklist.Close()
-	if err == nil {
-		log.Infof("added %d domains to blacklist", blacklist.Len())
-	}
-
-	return blacklist, err
-}
-
-// Prints the elapsed time in the pre-formatted message
-func logTime(msg string, since time.Time) {
-	elapsed := time.Since(since)
-	msg = fmt.Sprintf(msg, elapsed)
-	log.Info(msg)
+	return string(buf)
 }
