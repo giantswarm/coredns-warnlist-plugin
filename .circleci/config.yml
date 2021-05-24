@@ -52,6 +52,59 @@ jobs:
           root: .
           paths:
             - coredns
+  
+  create-cluster:
+    machine: true
+    environment:
+      KIND_VERSION: v0.10.0
+      KUBERNETES_VERSION: v1.19.7
+    steps:
+      - checkout
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ./
+      - run:
+          name: Download kind
+          command: |
+            curl -sLo kind https://github.com/kubernetes-sigs/kind/releases/download/$KIND_VERSION/kind-linux-amd64
+      - run:
+          name: Download kubectl
+          command: |
+            curl -sLO https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x kind kubectl
+      - run:
+          name: Create cluster
+          command: |
+            ./kind create cluster --image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION --name coredns-warnlist-cluster  2> /dev/null
+      - run:
+          name: Wait for the cluster node to be ready
+          command: |
+            ./kubectl wait nodes/coredns-warnlist-cluster-control-plane --for=condition=ready --timeout=5m > /dev/null
+            ./kind get kubeconfig --name coredns-warnlist-cluster > ./kube.config
+      - run:
+          name: Patch CoreDNS image version
+          command: |
+            echo "Setting image to $(cat .docker_image_name)"
+            ./kubectl set image -n kube-system deployment/coredns coredns=$(cat .docker_image_name)
+            ./kubectl patch clusterroles system:coredns -n kube-system -p "$(cat ./ci/coredns_clusterroles_patch.yaml)"
+      - run:
+          name: Wait for all pods to be ready
+          command: |
+            ./kubectl wait --for=condition=Ready pods --all --all-namespaces
+  
+  install-flamethrower:
+    docker:
+      - image: quay.io/giantswarm/helm-chart-testing:v3.3.1
+    parameters:
+      chart_path:
+        description: "The path to the chart to apply."
+        default: "helm/flamethrower"
+        type: string
+    steps:
+      - run: 
+          command: helm install --repo https://raw.githubusercontent.com/giantswarm/giantswarm-playground-catalog/master/ flamethrower flamethrower
+          name: Installing Flamethrower
+
+
 
 workflows:
   test:
@@ -67,6 +120,7 @@ workflows:
           coredns_reference: "v1.8.3"
 
       - architect/push-to-docker:
+          name: push-to-quay
           image: quay.io/giantswarm/coredns-malicious-domain-plugin
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
@@ -77,3 +131,16 @@ workflows:
             # Trigger job also on git tag.
             tags:
               only: /^v.*/
+          post-steps:
+            # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
+            - persist_to_workspace:
+                # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+                # taken to be the root directory of the workspace.
+                root: ./
+                # Must be relative path from root
+                paths:
+                  - .docker_image_name
+      
+      - create-cluster:
+          requires:
+            - push-to-quay
