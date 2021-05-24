@@ -60,6 +60,9 @@ jobs:
       KUBERNETES_VERSION: v1.19.7
     steps:
       - checkout
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ./
       - run:
           name: Download kind
           command: |
