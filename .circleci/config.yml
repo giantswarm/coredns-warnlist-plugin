@@ -83,8 +83,12 @@ jobs:
       - run:
           name: Patch CoreDNS image version
           command: |
-            kubectl set image -n kube-system deployment/coredns coredns=quay.io/giantswarm/coredns-malicious-domain-plugin:$(cat .docker_image_name)
-            kubectl patch clusterroles system:coredns -n kube-system -p "$(cat ./ci/coredns_clusterroles_patch.yaml)"
+            ./kubectl set image -n kube-system deployment/coredns coredns=quay.io/giantswarm/coredns-malicious-domain-plugin:$(cat .docker_image_name)
+            ./kubectl patch clusterroles system:coredns -n kube-system -p "$(cat ./ci/coredns_clusterroles_patch.yaml)"
+      - run:
+          name: Wait for all pods to be ready
+          command: |
+            ./kubectl wait --for=condition=Ready pods --all --all-namespaces
   
   install-flamethrower:
     docker:
