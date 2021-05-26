@@ -89,7 +89,7 @@ jobs:
       - run:
           name: Wait for all pods to be ready
           command: |
-            ./kubectl wait --for=condition=Ready pods --all --all-namespaces
+            ./kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=5m
   
   install-flamethrower:
     docker:
