@@ -1,4 +1,4 @@
-package malicious
+package warnlist
 
 import (
 	"context"
@@ -17,60 +17,60 @@ import (
 
 // Define log to be a logger with the plugin name in it. This way we can just use log.Info and
 // friends to log.
-var log = clog.NewWithPlugin("malicious")
+var log = clog.NewWithPlugin("warnlist")
 
-// Malicious is a plugin which counts requests to blacklisted domains
-type Malicious struct {
+// WarnlistPlugin is a plugin which counts requests to warnlisted domains
+type WarnlistPlugin struct {
 	Next           plugin.Handler
-	blacklist      Blacklist
+	warnlist       Warnlist
 	lastReloadTime time.Time
 	Options        PluginOptions
 	serverName     string
 	quit           chan bool
 }
 
-// ServeDNS implements the plugin.Handler interface. This method gets called when malicious is used
+// ServeDNS implements the plugin.Handler interface. This method gets called when warnlist is used
 // in a Server.
-func (m *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+func (wp *WarnlistPlugin) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 
 	req := request.Request{W: w, Req: r}
 
-	if m.blacklist != nil {
+	if wp.warnlist != nil {
 		// See if the requested domain is in the cache
 		retrievalStart := time.Now()
-		hit := m.blacklist.Contains(req.Name())
+		hit := wp.warnlist.Contains(req.Name())
 
 		// Record the duration for the query
-		blacklistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
+		warnlistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
 
 		if hit {
 			// Warn and increment the counter for the hit
-			blacklistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
-			log.Warning("host ", req.IP(), " requested blacklisted domain: ", req.Name())
+			warnlistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
+			log.Warning("host ", req.IP(), " requested warnlisted domain: ", req.Name())
 		}
 
-		// Update the current blacklist size metric
-		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(m.blacklist.Len()))
+		// Update the current warnlist size metric
+		warnlistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(wp.warnlist.Len()))
 	} else {
-		log.Warning("no blacklist has been loaded")
-		// Update the current blacklist size metric to 0
-		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(0))
+		log.Warning("no warnlist has been loaded")
+		// Update the current warnlist size metric to 0
+		warnlistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(0))
 	}
 
 	// Update the server name from context if it has changed
-	if metrics.WithServer(ctx) != m.serverName {
-		m.serverName = metrics.WithServer(ctx)
+	if metrics.WithServer(ctx) != wp.serverName {
+		wp.serverName = metrics.WithServer(ctx)
 	}
 
 	// Wrap the response when it returns from the next plugin
 	pw := NewResponsePrinter(w)
 
 	// Call next plugin (if any).
-	return plugin.NextOrFailure(m.Name(), m.Next, ctx, pw, r)
+	return plugin.NextOrFailure(wp.Name(), wp.Next, ctx, pw, r)
 }
 
 // Name implements the Handler interface.
-func (m Malicious) Name() string { return "malicious" }
+func (wp WarnlistPlugin) Name() string { return "warnlist" }
 
 // ResponsePrinter wraps a dns.ResponseWriter and will let the plugin inspect the response.
 type ResponsePrinter struct {

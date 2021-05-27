@@ -1,4 +1,4 @@
-package malicious
+package warnlist
 
 import (
 	"strconv"
@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-var testBlacklist = []string{
+var testWarnlist = []string{
 	"example.org",
 	"something.evil",
 	"evil.com",
@@ -15,7 +15,7 @@ var testBlacklist = []string{
 	"coredns.io",
 }
 
-func Test_blacklistHits(t *testing.T) {
+func Test_warnlistHits(t *testing.T) {
 	var testCases = []struct {
 		domain string
 		hit    bool
@@ -34,8 +34,8 @@ func Test_blacklistHits(t *testing.T) {
 	}
 
 	// Create our testing list
-	list := NewBlacklist()
-	for _, d := range testBlacklist {
+	list := NewWarnlist()
+	for _, d := range testWarnlist {
 		list.Add(d)
 	}
 	list.Close()
@@ -91,8 +91,8 @@ func Test_radixContains(t *testing.T) {
 		},
 	}
 
-	list := NewRadixBlacklist()
-	for _, d := range testBlacklist {
+	list := NewRadixWarnlist()
+	for _, d := range testWarnlist {
 		list.Add(d)
 	}
 	list.Close()

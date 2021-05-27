@@ -1,4 +1,4 @@
-package malicious
+package warnlist
 
 import (
 	"bytes"
@@ -11,16 +11,16 @@ import (
 	"github.com/miekg/dns"
 )
 
-func TestMalicious(t *testing.T) {
+func TestWarnlist(t *testing.T) {
 
-	// Create a minimal blacklist for this test.
-	bl := NewBlacklist()
-	bl.Add("example.org.")
-	bl.Add("totally.cool")
-	bl.Close()
+	// Create a minimal warnlist for this test.
+	wl := NewWarnlist()
+	wl.Add("example.org.")
+	wl.Add("totally.cool")
+	wl.Close()
 
-	// Create a new Malicious Plugin. Use the test.ErrorHandler as the next plugin.
-	m := Malicious{Next: test.ErrorHandler(), blacklist: bl}
+	// Create a new Warnlist Plugin. Use the test.ErrorHandler as the next plugin.
+	m := WarnlistPlugin{Next: test.ErrorHandler(), warnlist: wl}
 
 	// Setup a new output buffer that is *not* standard output, so we can check if
 	// example is really being printed.
@@ -39,7 +39,7 @@ func TestMalicious(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error serving DNS: %v", err)
 	}
-	// if a := b.String(); a != "host 10.240.0.1 requested blacklisted domain: example.org.\n" { // TODO: Check log output instead of response
+	// if a := b.String(); a != "host 10.240.0.1 requested warnlisted domain: example.org.\n" { // TODO: Check log output instead of response
 	// 	t.Errorf("Failed to print '%s', got %s", "example", a)
 	// }
 }

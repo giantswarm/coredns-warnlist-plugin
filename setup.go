@@ -1,4 +1,4 @@
-package malicious
+package warnlist
 
 import (
 	"fmt"
@@ -24,10 +24,10 @@ type PluginOptions struct {
 }
 
 // init registers this plugin.
-func init() { plugin.Register("malicious", setup) }
+func init() { plugin.Register("warnlist", setup) }
 
-// setup is the function that gets called when the config parser sees the token "malicious". Setup is responsible
-// for parsing any extra options the plugin may have. The first token this function sees is "malicious".
+// setup is the function that gets called when the config parser sees the token "warnlist". Setup is responsible
+// for parsing any extra options the plugin may have. The first token this function sees is "warnlist".
 func setup(c *caddy.Controller) error {
 
 	options, err := parseArguments(c)
@@ -36,8 +36,8 @@ func setup(c *caddy.Controller) error {
 		return err
 	}
 
-	// Build the cache for the blacklist
-	blacklist, err := buildCacheFromFile(options)
+	// Build the cache for the warnlist
+	warnlist, err := buildCacheFromFile(options)
 	reloadTime := time.Now()
 	if err != nil {
 		// Require the first build to succeed
@@ -46,14 +46,14 @@ func setup(c *caddy.Controller) error {
 
 	// Add the Plugin to CoreDNS, so Servers can use it in their plugin chain.
 	q := make(chan bool)
-	m := Malicious{blacklist: blacklist, lastReloadTime: reloadTime, Options: options, quit: q}
+	wp := WarnlistPlugin{warnlist: warnlist, lastReloadTime: reloadTime, Options: options, quit: q}
 
 	var tick *time.Ticker
 	{
 		// If our ReloadPeriod is configured, set up the reload hook
 		if options.ReloadPeriod > 0*time.Second {
 			tick = time.NewTicker(options.ReloadPeriod)
-			reloadHook(&m, tick)
+			reloadHook(&wp, tick)
 		}
 	}
 
@@ -63,22 +63,22 @@ func setup(c *caddy.Controller) error {
 		// If our ReloadPeriod is configured, tear down the reload hook
 		if options.ReloadPeriod > 0*time.Second {
 			tick.Stop()
-			m.quit <- true
+			wp.quit <- true
 		}
 
 		return nil
 	})
 
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		m.Next = next
-		return &m
+		wp.Next = next
+		return &wp
 	})
 
 	// All OK, return a nil error.
 	return nil
 }
 
-func reloadHook(m *Malicious, tick *time.Ticker) {
+func reloadHook(wp *WarnlistPlugin, tick *time.Ticker) {
 	go func() {
 		for {
 			// log.Info("loop iteration")
@@ -86,9 +86,9 @@ func reloadHook(m *Malicious, tick *time.Ticker) {
 			case <-tick.C:
 				// log.Info("Hook ticked")
 
-				rebuildBlacklist(m)
+				rebuildWarnlist(wp)
 
-			case <-m.quit:
+			case <-wp.quit:
 				// log.Info("Stopping hook")
 				tick.Stop()
 				return
@@ -111,10 +111,10 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 		}
 	}
 
-	// Check that a source for the blacklist was given
+	// Check that a source for the warnlist was given
 	if options.DomainSource == "" {
-		log.Error("domain blacklist file or url is required")
-		return options, plugin.Error("malicious", c.ArgErr())
+		log.Error("domain warnlist file or url is required")
+		return options, plugin.Error("warnlist", c.ArgErr())
 	}
 
 	// Check that the specified file format is valid
@@ -125,7 +125,7 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 		}
 	}
 	if !valid {
-		return options, plugin.Error("malicious", c.Errf("unknown file format: %s", options.FileFormat))
+		return options, plugin.Error("warnlist", c.Errf("unknown file format: %s", options.FileFormat))
 	}
 
 	return options, nil
@@ -144,7 +144,7 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 			return c.ArgErr()
 		}
 		options.FileFormat = c.Val()
-		log.Infof("Using domain blacklist file: %s with format %s", options.DomainSource, options.FileFormat)
+		log.Infof("Using domain warnlist file: %s with format %s", options.DomainSource, options.FileFormat)
 
 	case "match_subdomains":
 		if !c.NextArg() {
@@ -175,7 +175,7 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 			return c.ArgErr()
 		}
 		options.FileFormat = c.Val()
-		log.Infof("Using domain blacklist url: %s with format %s", options.DomainSource, options.FileFormat)
+		log.Infof("Using domain warnlist url: %s with format %s", options.DomainSource, options.FileFormat)
 
 	case "reload":
 		if !c.NextArg() {
