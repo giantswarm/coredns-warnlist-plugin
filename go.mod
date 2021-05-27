@@ -1,4 +1,4 @@
-module github.com/giantswarm/coredns-malicious-domain-plugin
+module github.com/giantswarm/coredns-warnlist-plugin
 
 go 1.14
 
