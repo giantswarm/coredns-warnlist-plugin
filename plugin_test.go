@@ -14,13 +14,13 @@ import (
 func TestMalicious(t *testing.T) {
 
 	// Create a minimal warnlist for this test.
-	bl := NewWarnlist()
-	bl.Add("example.org.")
-	bl.Add("totally.cool")
-	bl.Close()
+	wl := NewWarnlist()
+	wl.Add("example.org.")
+	wl.Add("totally.cool")
+	wl.Close()
 
 	// Create a new Malicious Plugin. Use the test.ErrorHandler as the next plugin.
-	m := Malicious{Next: test.ErrorHandler(), warnlist: bl}
+	m := Malicious{Next: test.ErrorHandler(), warnlist: wl}
 
 	// Setup a new output buffer that is *not* standard output, so we can check if
 	// example is really being printed.
