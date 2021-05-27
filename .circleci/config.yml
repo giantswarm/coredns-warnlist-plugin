@@ -66,14 +66,17 @@ jobs:
       - run:
           name: Download kind
           command: |
+            echo "Downloading kind $KIND_VERSION"
             curl -sLo kind https://github.com/kubernetes-sigs/kind/releases/download/$KIND_VERSION/kind-linux-amd64
       - run:
           name: Download kubectl
           command: |
+            echo "Downloading kubectl $KUBERNETES_VERSION"
             curl -sLO https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x kind kubectl
       - run:
           name: Create cluster
           command: |
+            echo "Creating cluster using image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION"
             ./kind create cluster --image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION --name coredns-warnlist-cluster  2> /dev/null
       - run:
           name: Wait for the cluster node to be ready
@@ -89,7 +92,7 @@ jobs:
       - run:
           name: Wait for all pods to be ready
           command: |
-            ./kubectl wait --for=condition=Ready pods --all --all-namespaces
+            ./kubectl rollout status -w -n kube-system deployment/coredns --timeout=5m
   
   install-flamethrower:
     docker:
