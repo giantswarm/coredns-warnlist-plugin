@@ -127,7 +127,7 @@ workflows:
 
       - architect/push-to-docker:
           name: push-to-quay
-          image: quay.io/giantswarm/coredns-warnlist-domain-plugin
+          image: quay.io/giantswarm/coredns-warnlist-plugin
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
           requires:
