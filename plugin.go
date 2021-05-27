@@ -1,4 +1,4 @@
-package malicious
+package warnlist
 
 import (
 	"context"
@@ -19,10 +19,10 @@ import (
 // friends to log.
 var log = clog.NewWithPlugin("malicious")
 
-// Malicious is a plugin which counts requests to blacklisted domains
+// Malicious is a plugin which counts requests to warnlisted domains
 type Malicious struct {
 	Next           plugin.Handler
-	blacklist      Blacklist
+	warnlist       Warnlist
 	lastReloadTime time.Time
 	Options        PluginOptions
 	serverName     string
@@ -35,26 +35,26 @@ func (m *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 
 	req := request.Request{W: w, Req: r}
 
-	if m.blacklist != nil {
+	if m.warnlist != nil {
 		// See if the requested domain is in the cache
 		retrievalStart := time.Now()
-		hit := m.blacklist.Contains(req.Name())
+		hit := m.warnlist.Contains(req.Name())
 
 		// Record the duration for the query
-		blacklistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
+		warnlistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
 
 		if hit {
 			// Warn and increment the counter for the hit
-			blacklistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
-			log.Warning("host ", req.IP(), " requested blacklisted domain: ", req.Name())
+			warnlistCount.WithLabelValues(metrics.WithServer(ctx), req.IP(), req.Name()).Inc()
+			log.Warning("host ", req.IP(), " requested warnlisted domain: ", req.Name())
 		}
 
-		// Update the current blacklist size metric
-		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(m.blacklist.Len()))
+		// Update the current warnlist size metric
+		warnlistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(m.warnlist.Len()))
 	} else {
-		log.Warning("no blacklist has been loaded")
-		// Update the current blacklist size metric to 0
-		blacklistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(0))
+		log.Warning("no warnlist has been loaded")
+		// Update the current warnlist size metric to 0
+		warnlistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(0))
 	}
 
 	// Update the server name from context if it has changed

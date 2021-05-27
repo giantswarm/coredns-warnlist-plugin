@@ -1,4 +1,4 @@
-package malicious
+package warnlist
 
 import (
 	"fmt"
@@ -7,10 +7,11 @@ import (
 	"unicode/utf8"
 
 	"github.com/alecthomas/mph"
+	"github.com/coredns/coredns/plugin/pkg/log"
 	iradix "github.com/hashicorp/go-immutable-radix"
 )
 
-type Blacklist interface {
+type Warnlist interface {
 	Add(key string)
 	Contains(key string) bool
 	Close() error
@@ -18,146 +19,146 @@ type Blacklist interface {
 	Open()
 }
 
-func NewBlacklist() Blacklist {
-	b := &GoMapBlacklist{}
+func NewWarnlist() Warnlist {
+	b := &GoMapWarnlist{}
 	b.Open()
 	return b
 }
 
-func NewRadixBlacklist() Blacklist {
-	b := &RadixBlacklist{}
+func NewRadixWarnlist() Warnlist {
+	b := &RadixWarnlist{}
 	b.Open()
 	return b
 }
 
-type RadixBlacklist struct {
-	blacklist *iradix.Tree
+type RadixWarnlist struct {
+	warnlist *iradix.Tree
 }
 
-func (r *RadixBlacklist) Add(key string) {
+func (r *RadixWarnlist) Add(key string) {
 	// Add the domain in reverse so we can pretend it's a prefix.
 	key = reverseString(key)
 
-	b, _, _ := r.blacklist.Insert([]byte(key), 1)
-	r.blacklist = b
+	b, _, _ := r.warnlist.Insert([]byte(key), 1)
+	r.warnlist = b
 }
 
-func (r *RadixBlacklist) Contains(key string) bool {
+func (r *RadixWarnlist) Contains(key string) bool {
 	keyR := reverseString(key)
 
-	m, _, ok := r.blacklist.Root().LongestPrefix([]byte(keyR))
+	m, _, ok := r.warnlist.Root().LongestPrefix([]byte(keyR))
 	if !ok {
 		return false
 	}
 	return isFullPrefixMatch(keyR, string(m))
 }
 
-func (r *RadixBlacklist) Close() error {
+func (r *RadixWarnlist) Close() error {
 	// Nothing to do to close an iradix
 	return nil
 }
 
-func (r *RadixBlacklist) Len() int {
-	return r.blacklist.Len()
+func (r *RadixWarnlist) Len() int {
+	return r.warnlist.Len()
 }
 
-func (r *RadixBlacklist) Open() {
+func (r *RadixWarnlist) Open() {
 	tree := iradix.New()
-	r.blacklist = tree
+	r.warnlist = tree
 }
 
 // Go Map
 
-type GoMapBlacklist struct {
-	blacklist map[string]struct{}
+type GoMapWarnlist struct {
+	warnlist map[string]struct{}
 }
 
-func (m *GoMapBlacklist) Add(key string) {
-	m.blacklist[key] = struct{}{}
+func (m *GoMapWarnlist) Add(key string) {
+	m.warnlist[key] = struct{}{}
 }
 
-func (m *GoMapBlacklist) Contains(key string) bool {
-	_, ok := m.blacklist[key]
+func (m *GoMapWarnlist) Contains(key string) bool {
+	_, ok := m.warnlist[key]
 	return ok
 }
 
-func (m *GoMapBlacklist) Close() error {
+func (m *GoMapWarnlist) Close() error {
 	// Nothing to do to close a map
 	return nil
 }
 
-func (m *GoMapBlacklist) Len() int {
-	return len(m.blacklist)
+func (m *GoMapWarnlist) Len() int {
+	return len(m.warnlist)
 }
 
-func (m *GoMapBlacklist) Open() {
-	m.blacklist = make(map[string]struct{})
+func (m *GoMapWarnlist) Open() {
+	m.warnlist = make(map[string]struct{})
 }
 
 // MPH
 
-type MPHBlacklist struct {
-	blacklist *mph.CHD
-	builder   *mph.CHDBuilder
+type MPHWarnlist struct {
+	warnlist *mph.CHD
+	builder  *mph.CHDBuilder
 }
 
-func (m *MPHBlacklist) Add(key string) {
+func (m *MPHWarnlist) Add(key string) {
 	m.builder.Add([]byte(key), []byte(""))
 }
 
-func (m *MPHBlacklist) Contains(key string) bool {
-	hit := m.blacklist.Get([]byte(key))
+func (m *MPHWarnlist) Contains(key string) bool {
+	hit := m.warnlist.Get([]byte(key))
 	return hit != nil
 }
 
-func (m *MPHBlacklist) Close() error {
-	blacklist, err := m.builder.Build()
+func (m *MPHWarnlist) Close() error {
+	warnlist, err := m.builder.Build()
 	if err != nil {
 		if strings.Contains(err.Error(), "failed to find a collision-free hash function") {
-			// Special case where there are 2^n objects in the mph blacklist
+			// Special case where there are 2^n objects in the mph warnlist
 			m.Add("some.bogus")
 			msg := "when using the MPH backend, the number of items must not be a power of 2. The domain \"some.bogus\" has been added to allow building the cache."
 			log.Warning(msg)
-			blacklist, err = m.builder.Build()
+			warnlist, err = m.builder.Build()
 		}
 	}
 	m.builder = nil
-	m.blacklist = blacklist
+	m.warnlist = warnlist
 
 	return err
 }
 
-func (m *MPHBlacklist) Len() int {
-	return m.blacklist.Len()
+func (m *MPHWarnlist) Len() int {
+	return m.warnlist.Len()
 }
 
-func (m *MPHBlacklist) Open() {
+func (m *MPHWarnlist) Open() {
 	m.builder = mph.Builder()
 }
 
-func buildCacheFromFile(options PluginOptions) (Blacklist, error) {
+func buildCacheFromFile(options PluginOptions) (Warnlist, error) {
 	// Print a log message with the time it took to build the cache
-	defer logTime("Building blacklist cache took %s", time.Now())
+	defer logTime("Building warnlist cache took %s", time.Now())
 
-	var blacklist Blacklist
+	var warnlist Warnlist
 	{
 		if options.MatchSubdomains {
-			blacklist = NewRadixBlacklist()
+			warnlist = NewRadixWarnlist()
 		} else {
-			blacklist = NewBlacklist()
+			warnlist = NewWarnlist()
 		}
 	}
 
 	for domain := range domainsFromSource(options.DomainSource, options.DomainSourceType, options.FileFormat) {
-		blacklist.Add(domain)
+		warnlist.Add(domain)
 	}
 
-	err := blacklist.Close()
+	err := warnlist.Close()
 	if err == nil {
-		log.Infof("added %d domains to blacklist", blacklist.Len())
+		log.Infof("added %d domains to warnlist", warnlist.Len())
 	}
 
-	return blacklist, err
+	return warnlist, err
 }
 
 // isFullPrefixMatch is a radix helper to determine if the prefix match is valid.
@@ -174,24 +175,24 @@ func logTime(msg string, since time.Time) {
 	log.Info(msg)
 }
 
-func rebuildBlacklist(m *Malicious) {
-	// Rebuild the cache for the blacklist
-	blacklist, err := buildCacheFromFile(m.Options)
+func rebuildWarnlist(m *Malicious) {
+	// Rebuild the cache for the warnlist
+	warnlist, err := buildCacheFromFile(m.Options)
 	if err != nil {
-		log.Errorf("error rebuilding blacklist: %v#", err)
+		log.Errorf("error rebuilding warnlist: %v#", err)
 
 		if m.serverName != "" {
 			reloadsFailedCount.WithLabelValues(m.serverName).Inc()
 		}
 
-		// Don't update the existing blacklist
+		// Don't update the existing warnlist
 	} else {
 		reloadTime := time.Now()
-		m.blacklist = blacklist
+		m.warnlist = warnlist
 		m.lastReloadTime = reloadTime
 	}
 	if m.serverName != "" {
-		blacklistSize.WithLabelValues(m.serverName).Set(float64(m.blacklist.Len()))
+		warnlistSize.WithLabelValues(m.serverName).Set(float64(m.warnlist.Len()))
 	}
 
 }

@@ -1,4 +1,4 @@
-package malicious
+package warnlist
 
 // import (
 // 	"testing"

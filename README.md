@@ -16,10 +16,10 @@ Alternatively, you can build an image yourself from the upstream codebase using 
 
 The `malicious` plugin takes the following arguments:
 
-- the source type for the blacklist: either `url` or `file`
+- the source type for the warnlist: either `url` or `file`
 - the path to the source: either a url or file path
 - the format of the file to expect: either `hostfile` or `text` (see below)
-- the reload period: an optional Go Duration after which time (+/- 30% jitter) the blacklist will be regenerated*
+- the reload period: an optional Go Duration after which time (+/- 30% jitter) the warnlist will be regenerated*
 - whether or not to match subdomains: `true` (default) or `false` (see [Subdomains](#subdomains))
 
 \* when automatically reloading from a URL, please be friendly to the service hosting the file.
@@ -87,7 +87,7 @@ onlydanger.us
 
 ## Subdomains
 
-This plugin can optionally check requests for subdomains of those explicitly listed on the blacklist. For example, using a blacklist containing `very.evil`, requesting `something.very.evil` would also trigger a match.
+This plugin can optionally check requests for subdomains of those explicitly listed on the warnlist. For example, using a warnlist containing `very.evil`, requesting `something.very.evil` would also trigger a match.
 
 This feature (enabled by default) uses a [radix tree][iradix] to attempt to reduce the complexity of finding matches. This might affect the performance of the plugin more than the alternative Go map implementation (which can not match subdomains), but we don't yet have enough data to report how much impact can be expected.
 
@@ -131,10 +131,10 @@ You can then run `coredns` locally with `./coredns -dns.port "1053"`
 
 If monitoring is enabled (via the *prometheus* directive) the following metrics are exported:
 
-* `malicious_domains_hits_total{server, requestor, domain}` - counts the number of blacklisted domains requested
-* `malicious_domains_failed_reloads_count{server}` - counts the number of times the plugin has failed to reload its blacklist
+* `malicious_domains_hits_total{server, requestor, domain}` - counts the number of warnlisted domains requested
+* `malicious_domains_failed_reloads_count{server}` - counts the number of times the plugin has failed to reload its warnlist
 * `malicious_domains_cache_check_duration_seconds{server}` - summary exposing count and sum for determining the average time it takes to check the cache
-* `malicious_domains_blacklisted_items_count{server}` - current number of domains stored in the blacklist
+* `malicious_domains_warnlisted_items_count{server}` - current number of domains stored in the warnlist
 
 The `server` label indicated which server handled the request.
 
@@ -169,7 +169,7 @@ Sample Corefile
 If running the server locally on port 1053, you can use
 `dig +nocmd @localhost mx example.org -p1053 +noall +additional +tcp`
 to send a request.
-Using the domain blacklist above, this will trigger a blacklist hit.
+Using the domain warnlist above, this will trigger a warnlist hit.
 
 ## Also See
 

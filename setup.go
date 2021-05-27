@@ -1,4 +1,4 @@
-package malicious
+package warnlist
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
+	"github.com/coredns/coredns/plugin/pkg/log"
 
 	"github.com/coredns/caddy"
 )
@@ -36,8 +37,8 @@ func setup(c *caddy.Controller) error {
 		return err
 	}
 
-	// Build the cache for the blacklist
-	blacklist, err := buildCacheFromFile(options)
+	// Build the cache for the warnlist
+	warnlist, err := buildCacheFromFile(options)
 	reloadTime := time.Now()
 	if err != nil {
 		// Require the first build to succeed
@@ -46,7 +47,7 @@ func setup(c *caddy.Controller) error {
 
 	// Add the Plugin to CoreDNS, so Servers can use it in their plugin chain.
 	q := make(chan bool)
-	m := Malicious{blacklist: blacklist, lastReloadTime: reloadTime, Options: options, quit: q}
+	m := Malicious{warnlist: warnlist, lastReloadTime: reloadTime, Options: options, quit: q}
 
 	var tick *time.Ticker
 	{
@@ -86,7 +87,7 @@ func reloadHook(m *Malicious, tick *time.Ticker) {
 			case <-tick.C:
 				// log.Info("Hook ticked")
 
-				rebuildBlacklist(m)
+				rebuildWarnlist(m)
 
 			case <-m.quit:
 				// log.Info("Stopping hook")
@@ -111,9 +112,9 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 		}
 	}
 
-	// Check that a source for the blacklist was given
+	// Check that a source for the warnlist was given
 	if options.DomainSource == "" {
-		log.Error("domain blacklist file or url is required")
+		log.Error("domain warnlist file or url is required")
 		return options, plugin.Error("malicious", c.ArgErr())
 	}
 
@@ -144,7 +145,7 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 			return c.ArgErr()
 		}
 		options.FileFormat = c.Val()
-		log.Infof("Using domain blacklist file: %s with format %s", options.DomainSource, options.FileFormat)
+		log.Infof("Using domain warnlist file: %s with format %s", options.DomainSource, options.FileFormat)
 
 	case "match_subdomains":
 		if !c.NextArg() {
@@ -175,7 +176,7 @@ func parseBlock(c *caddy.Controller, options *PluginOptions) error {
 			return c.ArgErr()
 		}
 		options.FileFormat = c.Val()
-		log.Infof("Using domain blacklist url: %s with format %s", options.DomainSource, options.FileFormat)
+		log.Infof("Using domain warnlist url: %s with format %s", options.DomainSource, options.FileFormat)
 
 	case "reload":
 		if !c.NextArg() {
