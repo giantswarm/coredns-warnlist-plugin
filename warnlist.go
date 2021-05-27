@@ -7,7 +7,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/alecthomas/mph"
-	"github.com/coredns/coredns/plugin/pkg/log"
 	iradix "github.com/hashicorp/go-immutable-radix"
 )
 
