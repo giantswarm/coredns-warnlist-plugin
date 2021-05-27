@@ -17,10 +17,10 @@ import (
 
 // Define log to be a logger with the plugin name in it. This way we can just use log.Info and
 // friends to log.
-var log = clog.NewWithPlugin("malicious")
+var log = clog.NewWithPlugin("warnlist")
 
-// Malicious is a plugin which counts requests to warnlisted domains
-type Malicious struct {
+// WarnlistPlugin is a plugin which counts requests to warnlisted domains
+type WarnlistPlugin struct {
 	Next           plugin.Handler
 	warnlist       Warnlist
 	lastReloadTime time.Time
@@ -29,16 +29,16 @@ type Malicious struct {
 	quit           chan bool
 }
 
-// ServeDNS implements the plugin.Handler interface. This method gets called when malicious is used
+// ServeDNS implements the plugin.Handler interface. This method gets called when warnlist is used
 // in a Server.
-func (m *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+func (wp *WarnlistPlugin) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 
 	req := request.Request{W: w, Req: r}
 
-	if m.warnlist != nil {
+	if wp.warnlist != nil {
 		// See if the requested domain is in the cache
 		retrievalStart := time.Now()
-		hit := m.warnlist.Contains(req.Name())
+		hit := wp.warnlist.Contains(req.Name())
 
 		// Record the duration for the query
 		warnlistCheckDuration.WithLabelValues(metrics.WithServer(ctx)).Observe(time.Since(retrievalStart).Seconds())
@@ -50,7 +50,7 @@ func (m *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		}
 
 		// Update the current warnlist size metric
-		warnlistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(m.warnlist.Len()))
+		warnlistSize.WithLabelValues(metrics.WithServer(ctx)).Set(float64(wp.warnlist.Len()))
 	} else {
 		log.Warning("no warnlist has been loaded")
 		// Update the current warnlist size metric to 0
@@ -58,19 +58,19 @@ func (m *Malicious) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	}
 
 	// Update the server name from context if it has changed
-	if metrics.WithServer(ctx) != m.serverName {
-		m.serverName = metrics.WithServer(ctx)
+	if metrics.WithServer(ctx) != wp.serverName {
+		wp.serverName = metrics.WithServer(ctx)
 	}
 
 	// Wrap the response when it returns from the next plugin
 	pw := NewResponsePrinter(w)
 
 	// Call next plugin (if any).
-	return plugin.NextOrFailure(m.Name(), m.Next, ctx, pw, r)
+	return plugin.NextOrFailure(wp.Name(), wp.Next, ctx, pw, r)
 }
 
 // Name implements the Handler interface.
-func (m Malicious) Name() string { return "malicious" }
+func (wp WarnlistPlugin) Name() string { return "warnlist" }
 
 // ResponsePrinter wraps a dns.ResponseWriter and will let the plugin inspect the response.
 type ResponsePrinter struct {

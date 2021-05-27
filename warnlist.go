@@ -174,24 +174,24 @@ func logTime(msg string, since time.Time) {
 	log.Info(msg)
 }
 
-func rebuildWarnlist(m *Malicious) {
+func rebuildWarnlist(wp *WarnlistPlugin) {
 	// Rebuild the cache for the warnlist
-	warnlist, err := buildCacheFromFile(m.Options)
+	warnlist, err := buildCacheFromFile(wp.Options)
 	if err != nil {
 		log.Errorf("error rebuilding warnlist: %v#", err)
 
-		if m.serverName != "" {
-			reloadsFailedCount.WithLabelValues(m.serverName).Inc()
+		if wp.serverName != "" {
+			reloadsFailedCount.WithLabelValues(wp.serverName).Inc()
 		}
 
 		// Don't update the existing warnlist
 	} else {
 		reloadTime := time.Now()
-		m.warnlist = warnlist
-		m.lastReloadTime = reloadTime
+		wp.warnlist = warnlist
+		wp.lastReloadTime = reloadTime
 	}
-	if m.serverName != "" {
-		warnlistSize.WithLabelValues(m.serverName).Set(float64(m.warnlist.Len()))
+	if wp.serverName != "" {
+		warnlistSize.WithLabelValues(wp.serverName).Set(float64(wp.warnlist.Len()))
 	}
 
 }

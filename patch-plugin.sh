@@ -6,7 +6,7 @@ plugin_base=$2
 plugincfg="plugin.cfg"
 
 # Add our plugin to the coredns plugin list
-sed -i '/^log:log/a malicious:github.com/giantswarm/coredns-malicious-domain-plugin' "$target_base/$plugincfg"
+sed -i '/^log:log/a warnlist:github.com/giantswarm/coredns-malicious-domain-plugin' "$target_base/$plugincfg"
 
 # Add a replace to coredns's go.mod to use our local plugin
 if [ ! -z "$2" ]; then

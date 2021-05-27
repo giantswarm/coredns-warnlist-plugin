@@ -11,7 +11,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-func TestMalicious(t *testing.T) {
+func TestWarnlist(t *testing.T) {
 
 	// Create a minimal warnlist for this test.
 	wl := NewWarnlist()
@@ -19,8 +19,8 @@ func TestMalicious(t *testing.T) {
 	wl.Add("totally.cool")
 	wl.Close()
 
-	// Create a new Malicious Plugin. Use the test.ErrorHandler as the next plugin.
-	m := Malicious{Next: test.ErrorHandler(), warnlist: wl}
+	// Create a new Warnlist Plugin. Use the test.ErrorHandler as the next plugin.
+	m := WarnlistPlugin{Next: test.ErrorHandler(), warnlist: wl}
 
 	// Setup a new output buffer that is *not* standard output, so we can check if
 	// example is really being printed.

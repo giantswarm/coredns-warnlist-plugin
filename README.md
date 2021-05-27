@@ -1,20 +1,22 @@
-# malicious-domain
+# warnlist plugin
 
 ## Description
 
-CoreDNS plugin which periodically updates a cache of malicious domains, and exposes metrics and logs when a prohibited domain is requested. It does not block the request.
+CoreDNS plugin which periodically updates a cache of domains, and exposes metrics and logs when a listed domain is requested. It does not block the request. This plugin is intended to facilitate low-noise alerting based on DNS requests for known malicious domains.
+
+This plugin was previously referred to as `malicious-domains`.
 
 **This project is under development and has not been tested for heavy production workloads.**
 
 ## Usage
 
-We host a coredns image including this plugin at `quay.io/giantswarm/coredns-malicious-domain-plugin`. While we will try to keep this up to date on a best-effort basis, this is not an official image and may become behind or out of sync with the official image.
+We host a coredns image including this plugin at `quay.io/giantswarm/coredns-warnlist-plugin`. While we will try to keep this up to date on a best-effort basis, this is not an official image and may become behind or out of sync with the official image.
 
 Alternatively, you can build an image yourself from the upstream codebase using the instructions in the **Compilation** section below.
 
 ## Arguments
 
-The `malicious` plugin takes the following arguments:
+The `warnlist` plugin takes the following arguments:
 
 - the source type for the warnlist: either `url` or `file`
 - the path to the source: either a url or file path
@@ -27,7 +29,7 @@ The `malicious` plugin takes the following arguments:
 In your Corefile, the plugin options follow the format:
 
 ```
-    malicious {
+    warnlist {
         <source type> <source path> <file format>
         reload <reload period>
         match_subdomains <true | false>
@@ -36,7 +38,7 @@ In your Corefile, the plugin options follow the format:
 
 Sample Corefile configuration snippet (URL):
 ```
-    malicious {
+    warnlist {
         url https://urlhaus.abuse.ch/downloads/hostfile/ hostfile
         reload 60m
     }
@@ -44,7 +46,7 @@ Sample Corefile configuration snippet (URL):
 
 Sample Corefile configuration snippet (file):
 ```
-    malicious {
+    warnlist {
         file domains.txt text
         reload 5m
         match_subdomains true
@@ -101,7 +103,7 @@ A simple way to consume this plugin is by adding the following to [plugin.cfg](h
 ...
 errors:errors
 log:log
-malicious:github.com/giantswarm/coredns-malicious-domain-plugin  # Add this line
+warnlist:github.com/giantswarm/coredns-warnlist-plugin  # Add this line
 dnstap:dnstap
 acl:acl
 ...
@@ -122,7 +124,7 @@ make
 
 To compile using a local copy of the plugin, you can add a `replace` directive to `go.mod`:
 ```
-replace github.com/giantswarm/coredns-malicious-domain-plugin => /path/to/go/src/github.com/giantswarm/coredns-malicious-domain-plugin
+replace github.com/giantswarm/coredns-warnlist-plugin => /path/to/go/src/github.com/giantswarm/coredns-warnlist-plugin
 ```
 
 You can then run `coredns` locally with `./coredns -dns.port "1053"`
@@ -131,10 +133,10 @@ You can then run `coredns` locally with `./coredns -dns.port "1053"`
 
 If monitoring is enabled (via the *prometheus* directive) the following metrics are exported:
 
-* `malicious_domains_hits_total{server, requestor, domain}` - counts the number of warnlisted domains requested
-* `malicious_domains_failed_reloads_count{server}` - counts the number of times the plugin has failed to reload its warnlist
-* `malicious_domains_cache_check_duration_seconds{server}` - summary exposing count and sum for determining the average time it takes to check the cache
-* `malicious_domains_warnlisted_items_count{server}` - current number of domains stored in the warnlist
+* `warnlist_hits_total{server, requestor, domain}` - counts the number of warnlisted domains requested
+* `warnlist_failed_reloads_count{server}` - counts the number of times the plugin has failed to reload its warnlist
+* `warnlist_cache_check_duration_seconds{server}` - summary exposing count and sum for determining the average time it takes to check the cache
+* `warnlist_warnlisted_items_count{server}` - current number of domains stored in the warnlist
 
 The `server` label indicated which server handled the request.
 
@@ -157,7 +159,7 @@ Sample Corefile
 ~~~ corefile
 . {
     log
-    malicious {
+    warnlist {
         url https://urlhaus.abuse.ch/downloads/hostfile/ hostfile
         reload 60m
     }
