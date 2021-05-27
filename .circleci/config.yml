@@ -87,14 +87,12 @@ jobs:
           name: Patch CoreDNS image version
           command: |
             echo "Setting image to $(cat .docker_image_name)"
-            ./kubectl get pods -A
             ./kubectl set image -n kube-system deployment/coredns coredns=$(cat .docker_image_name)
             ./kubectl patch clusterroles system:coredns -n kube-system -p "$(cat ./ci/coredns_clusterroles_patch.yaml)"
       - run:
           name: Wait for all pods to be ready
           command: |
-            ./kubectl get pods -A
-            ./kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=5m
+            ./kubectl rollout status -w -n kube-system deployment/coredns --timeout=5m
   
   install-flamethrower:
     docker:
