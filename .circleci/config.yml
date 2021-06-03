@@ -124,6 +124,10 @@ workflows:
 
       - build-binary:
           coredns_reference: "v1.8.3"
+          filters:
+            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
 
       - architect/push-to-docker:
           name: push-to-quay
@@ -150,3 +154,7 @@ workflows:
       - create-cluster:
           requires:
             - push-to-quay
+          filters:
+            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
