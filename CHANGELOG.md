@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1] - 2021-06-03
+
 ### Added
 
 - Initial release
 
-[Unreleased]: https://github.com/giantswarm/coredns-warnlist-plugin/tree/master
+[Unreleased]: https://github.com/giantswarm/coredns-warnlist-plugin/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/giantswarm/coredns-warnlist-plugin/releases/tag/v0.0.1
