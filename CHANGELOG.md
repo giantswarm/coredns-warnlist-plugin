@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Fixed CI trigger to also run on tags.
+
 ## [0.0.2] - 2021-06-03
 
 ### Changed
