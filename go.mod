@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/hashicorp/go-immutable-radix v1.3.0
 	github.com/miekg/dns v1.1.42
-	github.com/prometheus/client_golang v1.10.0
+	github.com/prometheus/client_golang v1.11.0
 )
 
 replace github.com/gorilla/websocket v1.4.0 => github.com/gorilla/websocket v1.4.2
