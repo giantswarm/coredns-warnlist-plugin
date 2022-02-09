@@ -9,7 +9,7 @@ require (
 	github.com/coredns/coredns v1.8.3
 	github.com/google/go-cmp v0.5.7
 	github.com/hashicorp/go-immutable-radix v1.3.1
-	github.com/miekg/dns v1.1.45
+	github.com/miekg/dns v1.1.46
 	github.com/prometheus/client_golang v1.11.0
 )
 
