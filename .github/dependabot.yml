@@ -10,16 +10,12 @@ updates:
       interval: weekly
       time: "04:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - giantswarm/area-kaas
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
       time: "04:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - giantswarm/area-kaas
     ignore:
       - dependency-name: zricethezav/gitleaks-action
   - package-ecosystem: gomod
@@ -28,8 +24,6 @@ updates:
       interval: weekly
       time: "04:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - giantswarm/area-kaas
     ignore:
       - dependency-name: k8s.io/*
         versions:
