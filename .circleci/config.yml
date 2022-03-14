@@ -54,7 +54,8 @@ jobs:
             - coredns
   
   create-cluster:
-    machine: true
+    machine:
+      image: ubuntu-2004:current
     environment:
       KIND_VERSION: v0.10.0
       KUBERNETES_VERSION: v1.19.7
