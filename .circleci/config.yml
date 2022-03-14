@@ -123,7 +123,7 @@ workflows:
               only: /^v.*/
 
       - build-binary:
-          coredns_reference: "v1.8.3"
+          coredns_reference: "v1.9.1"
           filters:
             # Trigger job also on git tag.
             tags:
