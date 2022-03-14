@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update to go 1.17.
+- Update to `coredns` 1.9.1. The plugin is now built and tested with CoreDNS 1.9 and above.
+
 ## [0.0.3] - 2021-06-03
 
 ### Changed
