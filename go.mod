@@ -37,4 +37,4 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 )
 
-replace github.com/Azure/go-autorest/autorest/adal v0.9.18 => github.com/Azure/go-autorest/autorest/adal v0.9.22
+replace github.com/Azure/go-autorest/autorest/adal => github.com/Azure/go-autorest/autorest/adal v0.9.22
