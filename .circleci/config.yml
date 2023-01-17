@@ -6,7 +6,7 @@ orbs:
 jobs:
   build-binary:
     docker:
-      - image: quay.io/giantswarm/golang:1.17.8
+      - image: quay.io/giantswarm/golang:1.18.10
     parameters:
       coredns_reference:
         description: "The version/reference of CoreDNS to build with this plugin."
@@ -55,7 +55,7 @@ jobs:
   
   create-cluster:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2204:2022.10.2
     environment:
       KIND_VERSION: v0.13.0
       KUBERNETES_VERSION: v1.24.9
