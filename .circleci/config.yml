@@ -58,7 +58,7 @@ jobs:
       image: ubuntu-2204:2022.10.2
     environment:
       KIND_VERSION: v0.13.0
-      KUBERNETES_VERSION: v1.24.9
+      KUBERNETES_VERSION: v1.24.7
     steps:
       - checkout
       - attach_workspace:
