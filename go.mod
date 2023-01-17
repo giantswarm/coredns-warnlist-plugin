@@ -1,6 +1,6 @@
 module github.com/giantswarm/coredns-warnlist-plugin
 
-go 1.18
+go 1.19
 
 require (
 	github.com/alecthomas/mph v0.0.0-20190930022807-712982e3d8a2
