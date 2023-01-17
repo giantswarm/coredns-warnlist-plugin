@@ -36,9 +36,3 @@ require (
 	google.golang.org/grpc v1.52.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 )
-
-replace (
-	github.com/Azure/go-autorest/autorest/adal => github.com/Azure/go-autorest/autorest/adal v0.9.22
-	k8s.io/api => k8s.io/api v0.26.0
-	k8s.io/apimachinery => k8s.io/apimachinery v0.26.0
-)
