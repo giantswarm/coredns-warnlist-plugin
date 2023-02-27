@@ -132,6 +132,7 @@ workflows:
 
       - architect/push-to-docker:
           name: push-to-quay
+          context: "architect"
           image: quay.io/giantswarm/coredns-warnlist-plugin
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
