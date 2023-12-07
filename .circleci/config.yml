@@ -13,38 +13,38 @@ jobs:
         default: "master"
         type: string
     steps:
-      - run: 
+      - run:
           command: git clone https://github.com/coredns/coredns.git
           name: Cloning CoreDNS repository
 
-      - run: 
+      - run:
           command: cd coredns && git checkout << parameters.coredns_reference >>
           name: Checking out reference
 
       - checkout:
           path: plugin
 
-      - run: 
+      - run:
           command: ./plugin/patch-plugin.sh coredns plugin
           name: Patching CoreDNS plugin manifest
 
-      - run: 
+      - run:
           command: cd coredns && make
           name: Building CoreDNS binary
 
-      - run: 
+      - run:
           command: mv ./coredns/coredns ./coredns-binary
           name: Moving CoreDNS binary
-        
-      - run: 
+
+      - run:
           command: rm -rf ./coredns
           name: Removing CoreDNS repo
 
-      - run: 
+      - run:
           command: mv coredns-binary coredns
           name: Restoring CoreDNS binary
 
-      - run: 
+      - run:
           command: ./coredns -version
           name: Printing CoreDNS version
 
@@ -52,7 +52,7 @@ jobs:
           root: .
           paths:
             - coredns
-  
+
   create-cluster:
     machine:
       image: ubuntu-2204:2022.10.2
@@ -97,7 +97,7 @@ jobs:
           name: Wait for all pods to be ready
           command: |
             ./kubectl rollout status -w -n kube-system deployment/coredns --timeout=5m
-  
+
   install-flamethrower:
     docker:
       - image: quay.io/giantswarm/helm-chart-testing:v3.3.1
@@ -107,8 +107,10 @@ jobs:
         default: "helm/flamethrower"
         type: string
     steps:
-      - run: 
-          command: helm install --repo https://raw.githubusercontent.com/giantswarm/giantswarm-playground-catalog/master/ flamethrower flamethrower
+      - run:
+          command: helm install --repo 
+            https://raw.githubusercontent.com/giantswarm/giantswarm-playground-catalog/master/
+            flamethrower flamethrower
           name: Installing Flamethrower
 
 
@@ -130,12 +132,9 @@ workflows:
             tags:
               only: /^v.*/
 
-      - architect/push-to-docker:
-          name: push-to-quay
-          context: "architect"
-          image: quay.io/giantswarm/coredns-warnlist-plugin
-          username_envar: "QUAY_USERNAME"
-          password_envar: "QUAY_PASSWORD"
+      - architect/push-to-registries:
+          context: architect
+          name: push-to-registries
           requires:
             - go-test
             - build-binary
@@ -143,19 +142,9 @@ workflows:
             # Trigger job also on git tag.
             tags:
               only: /^v.*/
-          post-steps:
-            # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
-            - persist_to_workspace:
-                # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
-                # taken to be the root directory of the workspace.
-                root: ./
-                # Must be relative path from root
-                paths:
-                  - .docker_image_name
-      
       - create-cluster:
           requires:
-            - push-to-quay
+            - push-to-registries
           filters:
             # Trigger job also on git tag.
             tags:
