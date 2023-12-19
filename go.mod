@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/mph v0.0.0-20190930022807-712982e3d8a2
 	github.com/coredns/caddy v1.1.1
 	github.com/coredns/coredns v1.10.1
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/go-immutable-radix v1.3.1
 	github.com/miekg/dns v1.1.53
 	github.com/prometheus/client_golang v1.15.0
