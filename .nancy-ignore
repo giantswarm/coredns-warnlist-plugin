@@ -1,5 +1,2 @@
-sonatype-2022-5996 until=2023-05-01
-
-# Waiting on upstream releases
-CVE-2022-2835 until=2023-05-01
-CVE-2022-2837 until=2023-05-01
+CVE-2022-2835 until=2024-03-09 # github.com/coredns/coredns@v1.10.1
+CVE-2022-2837 until=2024-03-09 # github.com/coredns/coredns@v1.10.1
