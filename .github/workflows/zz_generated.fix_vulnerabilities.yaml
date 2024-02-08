@@ -75,6 +75,7 @@ jobs:
           branch="remediate-vulnerabilities-${{ needs.gather_facts.outputs.branch }}"
           echo "branch=${branch}" >> $GITHUB_OUTPUT
           git checkout -b "${branch}"
+          git config pull.rebase true
           git pull origin "${branch}" || true
       - name: Run nancy-fixer fix
         uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.3
