@@ -110,6 +110,6 @@ jobs:
           code=$(gh pr view remediate-vulnerabilities-main --json state | grep -i '"state":"open"'; echo $?)
           if [[ $code -eq 0 ]]
           then
-            gh pr create --title "Remediate Nancy findings on ${{ needs.gather_facts.outputs.branch }}" --body "Fix Nancy findings on branch ${{ needs.gather_facts.outputs.branch }}" --head ${{ steps.create_branch.outputs.branch }} --base "${{ needs.gather_facts.outputs.branch }}" | true
+            gh pr create --title "Remediate Nancy findings on ${{ needs.gather_facts.outputs.branch }}" --body "Fix Nancy findings on branch ${{ needs.gather_facts.outputs.branch }}" --head ${{ steps.create_branch.outputs.branch }} --base "${{ needs.gather_facts.outputs.branch }}"
             gh pr merge --auto --squash
           fi
