@@ -33,7 +33,7 @@ jobs:
         id: gather_facts
         run: |
           head="${{ inputs.branch || github.ref }}"
-          branch="${{ github.ref_name }}"
+          branch="${{ inputs.branch || github.ref_name }}"
 
           echo "branch=${branch}" >> $GITHUB_OUTPUT
 
