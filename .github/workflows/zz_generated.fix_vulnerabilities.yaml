@@ -76,12 +76,6 @@ jobs:
           echo "branch=${branch}" >> $GITHUB_OUTPUT
           # Create branch
           git checkout -b "${branch}"
-          # Fetch upstream branch
-          git fetch origin "${branch}" || true
-          # Update branch
-          git rebase ${{ needs.gather_facts.outputs.branch }}
-          # Merge
-          git pull origin ${branch} || true
       - name: Run nancy-fixer fix
         uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.3
         timeout-minutes: 20
@@ -106,7 +100,7 @@ jobs:
         env:
           remote_repo: "https://${{ github.actor }}:${{ steps.generate_token.outputs.token }}@github.com/${{ github.repository }}.git"
         run: |
-          git push "${remote_repo}" HEAD:"${{ steps.create_branch.outputs.branch }}"
+          git push -f "${remote_repo}" HEAD:"${{ steps.create_branch.outputs.branch }}"
       - name: Create PR
         env:
           GITHUB_TOKEN: "${{ steps.generate_token.outputs.token }}"
