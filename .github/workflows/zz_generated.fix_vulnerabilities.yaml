@@ -79,9 +79,9 @@ jobs:
           # Fetch upstream branch
           git fetch origin "${branch}" || true
           # Update branch
-          git rebase ${{ needs.gather_facts.outputs.branch }}
+          git rebase ${{ needs.gather_facts.outputs.branch }} || true
           # Merge
-          git merge
+          git merge || true
       - name: Run nancy-fixer fix
         uses: docker://gsoci.azurecr.io/giantswarm/nancy-fixer:0.4.3
         timeout-minutes: 20
