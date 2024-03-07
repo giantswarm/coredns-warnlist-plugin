@@ -1,2 +1,3 @@
 CVE-2022-2835 until=2024-03-09 # github.com/coredns/coredns@v1.10.1
 CVE-2022-2837 until=2024-03-09 # github.com/coredns/coredns@v1.10.1
+CVE-2024-24786 until=2024-04-06 # google.golang.org/protobuf@v1.30.0
