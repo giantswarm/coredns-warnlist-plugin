@@ -26,7 +26,7 @@ jobs:
       skip : ${{ steps.gather_facts.outputs.skip }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.1
         with:
           ref: ${{ inputs.branch || github.ref }}
       - name: Gather facts
@@ -64,7 +64,7 @@ jobs:
           app-id: ${{ secrets.HERALD_APP_ID }}
           private-key: ${{ secrets.HERALD_APP_KEY }}
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.1
         with:
           token: ${{ steps.generate_token.outputs.token }}
           persist-credentials: false
