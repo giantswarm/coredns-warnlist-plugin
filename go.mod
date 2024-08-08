@@ -39,3 +39,5 @@ require (
 )
 
 replace golang.org/x/crypto v0.14.0 => golang.org/x/crypto v0.19.0
+
+replace google.golang.org/protobuf v1.30.0 => google.golang.org/protobuf v1.34.2
