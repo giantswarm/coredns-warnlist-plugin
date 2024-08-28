@@ -1,2 +1,1 @@
-CVE-2024-24786 until=2024-08-08 # google.golang.org/protobuf@v1.30.0
-CVE-2024-0874 until=2024-08-28 # github.com/coredns/coredns@v1.10.1
+CVE-2024-0874 until=2024-09-27 # github.com/coredns/coredns@v1.10.1
