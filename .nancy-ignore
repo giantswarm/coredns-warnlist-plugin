@@ -1,2 +1,4 @@
-CVE-2024-0874 until=2024-09-27 # github.com/coredns/coredns@v1.10.1
+CVE-2024-0874 until=2024-10-20 # github.com/coredns/coredns@v1.10.1
 CVE-2024-8421 until=2024-10-06 # golang.org/x/net@v0.23.0
+CVE-2023-28452 until=2024-10-20 # github.com/coredns/coredns@v1.10.1
+CVE-2023-30464 until=2024-10-20 # github.com/coredns/coredns@v1.10.1
