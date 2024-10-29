@@ -6,52 +6,52 @@ orbs:
 jobs:
   build-binary:
     docker:
-      - image: quay.io/giantswarm/golang:1.18.10
+    - image: quay.io/giantswarm/golang:1.18.10
     parameters:
       coredns_reference:
-        description: "The version/reference of CoreDNS to build with this plugin."
-        default: "master"
+        description: The version/reference of CoreDNS to build with this plugin.
+        default: master
         type: string
     steps:
-      - run:
-          command: git clone https://github.com/coredns/coredns.git
-          name: Cloning CoreDNS repository
+    - run:
+        command: git clone https://github.com/coredns/coredns.git
+        name: Cloning CoreDNS repository
 
-      - run:
-          command: cd coredns && git checkout << parameters.coredns_reference >>
-          name: Checking out reference
+    - run:
+        command: cd coredns && git checkout << parameters.coredns_reference >>
+        name: Checking out reference
 
-      - checkout:
-          path: plugin
+    - checkout:
+        path: plugin
 
-      - run:
-          command: ./plugin/patch-plugin.sh coredns plugin
-          name: Patching CoreDNS plugin manifest
+    - run:
+        command: ./plugin/patch-plugin.sh coredns plugin
+        name: Patching CoreDNS plugin manifest
 
-      - run:
-          command: cd coredns && make
-          name: Building CoreDNS binary
+    - run:
+        command: cd coredns && make
+        name: Building CoreDNS binary
 
-      - run:
-          command: mv ./coredns/coredns ./coredns-binary
-          name: Moving CoreDNS binary
+    - run:
+        command: mv ./coredns/coredns ./coredns-binary
+        name: Moving CoreDNS binary
 
-      - run:
-          command: rm -rf ./coredns
-          name: Removing CoreDNS repo
+    - run:
+        command: rm -rf ./coredns
+        name: Removing CoreDNS repo
 
-      - run:
-          command: mv coredns-binary coredns
-          name: Restoring CoreDNS binary
+    - run:
+        command: mv coredns-binary coredns
+        name: Restoring CoreDNS binary
 
-      - run:
-          command: ./coredns -version
-          name: Printing CoreDNS version
+    - run:
+        command: ./coredns -version
+        name: Printing CoreDNS version
 
-      - persist_to_workspace:
-          root: .
-          paths:
-            - coredns
+    - persist_to_workspace:
+        root: .
+        paths:
+        - coredns
 
   create-cluster:
     machine:
@@ -60,92 +60,96 @@ jobs:
       KIND_VERSION: v0.13.0
       KUBERNETES_VERSION: v1.24.7
     steps:
-      - checkout
-      - attach_workspace:
+    - checkout
+    - attach_workspace:
           # Must be absolute path or relative path from working_directory
-          at: ./
-      - run:
-          name: Download kind
-          command: |
-            echo "Downloading kind $KIND_VERSION"
-            curl -sLo kind https://github.com/kubernetes-sigs/kind/releases/download/$KIND_VERSION/kind-linux-amd64
-      - run:
-          name: Download kubectl
-          command: |
-            echo "Downloading kubectl $KUBERNETES_VERSION"
-            curl -sLO https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x kind kubectl
-      - run:
-          name: Create cluster
-          command: |
-            echo "Creating cluster using image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION"
-            ./kind create cluster --image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION --name coredns-warnlist-cluster  2> /dev/null
-      - run:
-          name: Wait for the cluster node to be ready
-          command: |
-            ./kubectl wait nodes/coredns-warnlist-cluster-control-plane --for=condition=ready --timeout=5m > /dev/null
-            ./kind get kubeconfig --name coredns-warnlist-cluster > ./kube.config
-      - run:
-          name: Patch CoreDNS image version
-          command: |
-            echo "Setting image to $(cat .docker_image_name)"
-            ./kubectl set image -n kube-system deployment/coredns coredns=$(cat .docker_image_name)
-            echo "Updating RBAC for newer CoreDNS"
-            ./kubectl patch clusterroles system:coredns -n kube-system -p "$(cat ./ci/coredns_clusterroles_patch.yaml)"
-            echo "Using Corefile with our plugin configured"
-            ./kubectl create configmap coredns -n kube-system --from-literal=Corefile="$(cat ci/Corefile)" --dry-run=client -o yaml | ./kubectl apply -f -
-      - run:
-          name: Wait for all pods to be ready
-          command: |
-            ./kubectl rollout status -w -n kube-system deployment/coredns --timeout=5m
+        at: ./
+    - run:
+        name: Download kind
+        command: |
+          echo "Downloading kind $KIND_VERSION"
+          curl -sLo kind https://github.com/kubernetes-sigs/kind/releases/download/$KIND_VERSION/kind-linux-amd64
+    - run:
+        name: Download kubectl
+        command: |
+          echo "Downloading kubectl $KUBERNETES_VERSION"
+          curl -sLO https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x kind kubectl
+    - run:
+        name: Create cluster
+        command: |
+          echo "Creating cluster using image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION"
+          ./kind create cluster --image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION --name coredns-warnlist-cluster  2> /dev/null
+    - run:
+        name: Wait for the cluster node to be ready
+        command: |
+          ./kubectl wait nodes/coredns-warnlist-cluster-control-plane --for=condition=ready --timeout=5m > /dev/null
+          ./kind get kubeconfig --name coredns-warnlist-cluster > ./kube.config
+    - run:
+        name: Patch CoreDNS image version
+        command: |
+          echo "Setting image to $(cat .docker_image_name)"
+          ./kubectl set image -n kube-system deployment/coredns coredns=$(cat .docker_image_name)
+          echo "Updating RBAC for newer CoreDNS"
+          ./kubectl patch clusterroles system:coredns -n kube-system -p "$(cat ./ci/coredns_clusterroles_patch.yaml)"
+          echo "Using Corefile with our plugin configured"
+          ./kubectl create configmap coredns -n kube-system --from-literal=Corefile="$(cat ci/Corefile)" --dry-run=client -o yaml | ./kubectl apply -f -
+    - run:
+        name: Wait for all pods to be ready
+        command: |
+          ./kubectl rollout status -w -n kube-system deployment/coredns --timeout=5m
 
   install-flamethrower:
     docker:
-      - image: quay.io/giantswarm/helm-chart-testing:v3.3.1
+    - image: quay.io/giantswarm/helm-chart-testing:v3.3.1
     parameters:
       chart_path:
-        description: "The path to the chart to apply."
-        default: "helm/flamethrower"
+        description: The path to the chart to apply.
+        default: helm/flamethrower
         type: string
     steps:
-      - run:
-          command: helm install --repo 
-            https://raw.githubusercontent.com/giantswarm/giantswarm-playground-catalog/master/
-            flamethrower flamethrower
-          name: Installing Flamethrower
+    - run:
+        command: helm install --repo 
+          https://raw.githubusercontent.com/giantswarm/giantswarm-playground-catalog/master/
+          flamethrower flamethrower
+        name: Installing Flamethrower
 
 
 
 workflows:
   test:
     jobs:
-      - architect/go-test:
-          name: go-test
-          filters:
+    - architect/go-test:
+        name: go-test
+        filters:
             # Trigger job also on git tag.
-            tags:
-              only: /^v.*/
+          tags:
+            only: /^v.*/
 
-      - build-binary:
-          coredns_reference: "v1.10.0"
-          filters:
+    - build-binary:
+        coredns_reference: v1.10.0
+        filters:
             # Trigger job also on git tag.
-            tags:
-              only: /^v.*/
+          tags:
+            only: /^v.*/
 
-      - architect/push-to-registries:
-          context: architect
-          name: push-to-registries
-          requires:
-            - go-test
-            - build-binary
-          filters:
+    - architect/push-to-registries:
+        context: architect
+        name: push-to-registries
+        requires:
+        - go-test
+        - build-binary
+        filters:
             # Trigger job also on git tag.
-            tags:
-              only: /^v.*/
-      - create-cluster:
-          requires:
-            - push-to-registries
-          filters:
+          tags:
+            only: /^v.*/
+          branches:
+            ignore:
+            - main
+            - master
+    - create-cluster:
+        requires:
+        - push-to-registries
+        filters:
             # Trigger job also on git tag.
-            tags:
-              only: /^v.*/
+          tags:
+            only: /^v.*/
