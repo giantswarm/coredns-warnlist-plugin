@@ -30,17 +30,17 @@ func domainsFromSource(source string, sourceType string, sourceFormat string) ch
 				if err != nil {
 					log.Error(err)
 				}
-				defer file.Close()
+				defer file.Close() // nolint: errcheck
 				sourceData = file
+
 			} else if sourceType == DomainSourceTypeURL {
-				// TODO
 				log.Infof("Loading from URL: %s", source)
 				// Load the domain list from the URL
 				resp, err := http.Get(source) // nolint: gosec
 				if err != nil {
 					log.Error(err)
 				}
-				defer resp.Body.Close()
+				defer resp.Body.Close() // nolint: errcheck
 				sourceData = resp.Body
 			}
 		}

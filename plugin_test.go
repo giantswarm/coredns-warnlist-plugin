@@ -17,7 +17,11 @@ func TestWarnlist(t *testing.T) {
 	wl := NewWarnlist()
 	wl.Add("example.org.")
 	wl.Add("totally.cool")
-	wl.Close()
+
+	err := wl.Close()
+	if err != nil {
+		t.Fatalf("Error closing warnlist: %v", err)
+	}
 
 	// Create a new Warnlist Plugin. Use the test.ErrorHandler as the next plugin.
 	m := WarnlistPlugin{Next: test.ErrorHandler(), warnlist: wl}
@@ -35,7 +39,7 @@ func TestWarnlist(t *testing.T) {
 	rec := dnstest.NewRecorder(&test.ResponseWriter{})
 
 	// Call our plugin directly, and check the result.
-	_, err := m.ServeDNS(ctx, rec, r)
+	_, err = m.ServeDNS(ctx, rec, r)
 	if err != nil {
 		t.Fatalf("Error serving DNS: %v", err)
 	}
