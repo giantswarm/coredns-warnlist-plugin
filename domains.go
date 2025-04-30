@@ -113,7 +113,7 @@ func fetchFromSafeURL(rawURL string) (io.ReadCloser, error) {
 	}
 
 	// Fetch from URL
-	resp, err := http.Get(rawURL)
+	resp, err := http.Get(rawURL) // nolint:gosec
 	if err != nil {
 		return nil, err
 	}
