@@ -2,9 +2,12 @@ package warnlist
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -23,26 +26,28 @@ func domainsFromSource(source string, sourceType string, sourceFormat string) ch
 		defer close(c)
 
 		var sourceData io.Reader
-		{
-			if sourceType == DomainSourceTypeFile {
-				log.Infof("Loading from file: %s", source)
-				file, err := os.Open(source)
-				if err != nil {
-					log.Error(err)
-				}
-				defer file.Close() // nolint: errcheck
-				sourceData = file
 
-			} else if sourceType == DomainSourceTypeURL {
-				log.Infof("Loading from URL: %s", source)
-				// Load the domain list from the URL
-				resp, err := http.Get(source) // nolint: gosec
-				if err != nil {
-					log.Error(err)
-				}
-				defer resp.Body.Close() // nolint: errcheck
-				sourceData = resp.Body
+		switch sourceType {
+		case DomainSourceTypeFile:
+			log.Infof("Loading from file: %s", source)
+			file, err := openSafeFile(source)
+			if err != nil {
+				log.Error(err)
+				return
 			}
+			defer file.Close()
+			sourceData = file
+		case DomainSourceTypeURL:
+			// TODO
+			log.Infof("Loading from URL: %s", source)
+
+			body, err := fetchFromSafeURL(source)
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			defer body.Close()
+			sourceData = body
 		}
 
 		scanner := bufio.NewScanner(sourceData)
@@ -76,4 +81,47 @@ func domainsFromSource(source string, sourceType string, sourceFormat string) ch
 
 	return c
 
+}
+
+// openSafeFile validates and safely opens a file
+func openSafeFile(filePath string) (io.ReadCloser, error) {
+	// Convert to absolute path
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("invalid file path: %w", err)
+	}
+
+	file, err := os.Open(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}
+
+// fetchFromSafeURL validates the URL and fetches content
+func fetchFromSafeURL(rawURL string) (io.ReadCloser, error) {
+	// Validate URL
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL: %w", err)
+	}
+
+	// Only allow http and https schemes
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return nil, fmt.Errorf("unsupported URL scheme: %s", parsedURL.Scheme)
+	}
+
+	// Fetch from URL
+	resp, err := http.Get(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		resp.Body.Close()
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return resp.Body, nil
 }
