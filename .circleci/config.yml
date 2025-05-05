@@ -1,12 +1,12 @@
 version: 2.1
 
 orbs:
-  architect: giantswarm/architect@4.35.5
+  architect: giantswarm/architect@5.13.1
 
 jobs:
   build-binary:
     docker:
-    - image: quay.io/giantswarm/golang:1.18.10
+    - image: gsoci.azurecr.io/giantswarm/golang:1.24
     parameters:
       coredns_reference:
         description: The version/reference of CoreDNS to build with this plugin.
@@ -55,7 +55,7 @@ jobs:
 
   create-cluster:
     machine:
-      image: ubuntu-2204:2022.10.2
+      image: ubuntu-2404
     environment:
       KIND_VERSION: v0.13.0
       KUBERNETES_VERSION: v1.24.7
