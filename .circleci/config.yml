@@ -55,7 +55,7 @@ jobs:
 
   create-cluster:
     machine:
-      image: ubuntu-2404
+      image: ubuntu-2404:2024.11.1
     environment:
       KIND_VERSION: v0.13.0
       KUBERNETES_VERSION: v1.24.7
