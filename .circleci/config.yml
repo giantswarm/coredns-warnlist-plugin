@@ -1,12 +1,12 @@
 version: 2.1
 
 orbs:
-  architect: giantswarm/architect@4.35.5
+  architect: giantswarm/architect@5.13.1
 
 jobs:
   build-binary:
     docker:
-    - image: quay.io/giantswarm/golang:1.18.10
+    - image: gsoci.azurecr.io/giantswarm/golang:1.24
     parameters:
       coredns_reference:
         description: The version/reference of CoreDNS to build with this plugin.
@@ -55,7 +55,7 @@ jobs:
 
   create-cluster:
     machine:
-      image: ubuntu-2204:2022.10.2
+      image: ubuntu-2404:2024.11.1
     environment:
       KIND_VERSION: v0.13.0
       KUBERNETES_VERSION: v1.24.7
@@ -87,8 +87,8 @@ jobs:
     - run:
         name: Patch CoreDNS image version
         command: |
-          echo "Setting image to $(cat .docker_image_name)"
-          ./kubectl set image -n kube-system deployment/coredns coredns=$(cat .docker_image_name)
+          echo "Setting image to gsoci.azurecr.io/giantswarm/coredns-warnlist-plugin:$(cat .docker_image_tag)"
+          ./kubectl set image -n kube-system deployment/coredns coredns=gsoci.azurecr.io/giantswarm/coredns-warnlist-plugin:$(cat .docker_image_tag)
           echo "Updating RBAC for newer CoreDNS"
           ./kubectl patch clusterroles system:coredns -n kube-system -p "$(cat ./ci/coredns_clusterroles_patch.yaml)"
           echo "Using Corefile with our plugin configured"
@@ -113,8 +113,6 @@ jobs:
           flamethrower flamethrower
         name: Installing Flamethrower
 
-
-
 workflows:
   test:
     jobs:
@@ -126,7 +124,7 @@ workflows:
             only: /^v.*/
 
     - build-binary:
-        coredns_reference: v1.10.0
+        coredns_reference: v1.12.1
         filters:
             # Trigger job also on git tag.
           tags:
@@ -146,6 +144,7 @@ workflows:
             ignore:
             - main
             - master
+
     - create-cluster:
         requires:
         - push-to-registries
