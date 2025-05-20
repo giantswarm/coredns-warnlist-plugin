@@ -86,9 +86,10 @@ jobs:
           ./kind get kubeconfig --name coredns-warnlist-cluster > ./kube.config
     - run:
         name: Patch CoreDNS image version
+        # The .docker_image_name file is no longer creted during abs build. We need to find another way to determine what was built.
         command: |
-          echo "Setting image to gsoci.azurecr.io/giantswarm/coredns-warnlist-plugin:$(cat .docker_image_tag)"
-          ./kubectl set image -n kube-system deployment/coredns coredns=gsoci.azurecr.io/giantswarm/coredns-warnlist-plugin:$(cat .docker_image_tag)
+          echo "Setting image to $(cat .docker_image_name)"
+          ./kubectl set image -n kube-system deployment/coredns coredns=$(cat .docker_image_name)
           echo "Updating RBAC for newer CoreDNS"
           ./kubectl patch clusterroles system:coredns -n kube-system -p "$(cat ./ci/coredns_clusterroles_patch.yaml)"
           echo "Using Corefile with our plugin configured"
