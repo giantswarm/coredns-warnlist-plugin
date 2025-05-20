@@ -145,10 +145,12 @@ workflows:
             - main
             - master
 
-    - create-cluster:
-        requires:
-        - push-to-registries
-        filters:
-            # Trigger job also on git tag.
-          tags:
-            only: /^v.*/
+    # app-build-suite changes broke this workflow.
+    # It isn't possible to determine the name/tag of the built image at this point in the pipeline.
+    # - create-cluster:
+    #     requires:
+    #     - push-to-registries
+    #     filters:
+    #         # Trigger job also on git tag.
+    #       tags:
+    #         only: /^v.*/
