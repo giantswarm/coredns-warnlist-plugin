@@ -38,7 +38,10 @@ func Test_warnlistHits(t *testing.T) {
 	for _, d := range testWarnlist {
 		list.Add(d)
 	}
-	list.Close()
+	err := list.Close()
+	if err != nil {
+		t.Fatalf("Error closing warnlist: %v", err)
+	}
 
 	// Run the test cases
 	for i, tc := range testCases {
@@ -95,7 +98,10 @@ func Test_radixContains(t *testing.T) {
 	for _, d := range testWarnlist {
 		list.Add(d)
 	}
-	list.Close()
+	err := list.Close()
+	if err != nil {
+		t.Fatalf("Error closing radix warnlist: %v", err)
+	}
 
 	// Run the test cases
 	for i, tc := range testCases {
