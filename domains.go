@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -27,19 +26,11 @@ func domainsFromSource(source string, sourceType string, sourceFormat string) ch
 		switch sourceType {
 		case DomainSourceTypeFile:
 			log.Infof("Loading from file: %s", source)
-			// Clean the path
-			cleanPath := filepath.Clean(source)
-			if info, err := os.Stat(cleanPath); err != nil || info.IsDir() {
-				log.Error(err)
-				return
-			}
-
-			file, err := os.Open(cleanPath)
+			file, err := os.Open(source)
 			if err != nil {
 				log.Error(err)
-				return
 			}
-			defer file.Close() // nolint: errcheck
+			defer file.Close()
 			sourceData = file
 		case DomainSourceTypeURL:
 			// TODO
