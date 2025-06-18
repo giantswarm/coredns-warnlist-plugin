@@ -23,26 +23,28 @@ func domainsFromSource(source string, sourceType string, sourceFormat string) ch
 		defer close(c)
 
 		var sourceData io.Reader
-		{
-			if sourceType == DomainSourceTypeFile {
-				log.Infof("Loading from file: %s", source)
-				file, err := os.Open(source)
-				if err != nil {
-					log.Error(err)
-				}
-				defer file.Close()
-				sourceData = file
-			} else if sourceType == DomainSourceTypeURL {
-				// TODO
-				log.Infof("Loading from URL: %s", source)
-				// Load the domain list from the URL
-				resp, err := http.Get(source) // nolint: gosec
-				if err != nil {
-					log.Error(err)
-				}
-				defer resp.Body.Close()
-				sourceData = resp.Body
+		switch sourceType {
+		case DomainSourceTypeFile:
+			log.Infof("Loading from file: %s", source)
+			file, err := os.Open(source) // nolint: gosec
+			if err != nil {
+				log.Error(err)
+				return
 			}
+			defer file.Close() //nolint: errcheck
+			sourceData = file
+		case DomainSourceTypeURL:
+			log.Infof("Loading from URL: %s", source)
+			resp, err := http.Get(source) // nolint: gosec
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			defer resp.Body.Close()
+			sourceData = resp.Body // nolint: errcheck
+		default:
+			log.Errorf("Unknown source type: %s", sourceType)
+			return
 		}
 
 		scanner := bufio.NewScanner(sourceData)
