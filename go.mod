@@ -7,6 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/alecthomas/mph v0.0.0-20190930022807-712982e3d8a2
 	github.com/coredns/caddy v1.1.2-0.20241029205200-8de985351a98
+	// When bumping coredns/coredns, remember to also update the coredns_reference in .circleci/config.yml.
 	github.com/coredns/coredns v1.12.4
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-immutable-radix v1.3.1
