@@ -95,9 +95,9 @@ This feature (enabled by default) uses a [radix tree][iradix] to attempt to redu
 
 ## Compilation
 
-This plugin must be compiled with `coredns` -- it cannot be added to an existing `coredns` binary or Docker image.
+This plugin is compiled using a Go wrapper architecture. Instead of modifying the upstream CoreDNS source code and patching `plugin.cfg`, we import CoreDNS and the `warnlist` plugin in our own `main.go`.
 
-A simple way to consume this plugin is by adding the following to [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg) and recompiling it as [detailed on coredns.io](https://coredns.io/2017/07/25/compile-time-enabling-or-disabling-plugins/#build-with-compile-time-configuration-file).
+An alternative way to consume this plugin is by adding it to [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg) and recompiling coredns. This was previously the only and default method.
 
 ~~~
 ...
@@ -109,25 +109,22 @@ acl:acl
 ...
 ~~~
 
+Both approaches are [detailed on coredns.io](https://coredns.io/2017/07/25/compile-time-enabling-or-disabling-plugins/#build-with-compile-time-configuration-file).
+
 Then you can compile coredns with:
 
 ```shell script
-go generate
-go build
+go build -o coredns ./cmd/coredns
 ```
 
-Or you can instead use make:
+You can then run the compiled `coredns` binary locally with `./coredns -dns.port "1053"`
 
-```shell script
-make
-```
+### Local development
 
-To compile using a local copy of the plugin, you can add a `replace` directive to `go.mod`:
+To compile using a local copy of the plugin, clone `github.com/coredns/coredns`, modify plugin.cfg as described above, and add a `replace` directive to `go.mod`:
 ```
 replace github.com/giantswarm/coredns-warnlist-plugin => /path/to/go/src/github.com/giantswarm/coredns-warnlist-plugin
 ```
-
-You can then run `coredns` locally with `./coredns -dns.port "1053"`
 
 ## Metrics
 
