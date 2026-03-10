@@ -94,12 +94,6 @@ workflows:
           tags:
             only: /^v.*/
 
-    - build-binary:
-        filters:
-            # Trigger job also on git tag.
-          tags:
-            only: /^v.*/
-
     - architect/push-to-registries:
         context: architect
         name: push-to-registries
