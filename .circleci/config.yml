@@ -99,7 +99,6 @@ workflows:
         name: push-to-registries
         requires:
         - go-test
-        - build-binary
         filters:
             # Trigger job also on git tag.
           tags:
