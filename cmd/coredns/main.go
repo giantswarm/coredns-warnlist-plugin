@@ -8,6 +8,7 @@ import (
 	"github.com/coredns/coredns/coremain"
 
 	_ "github.com/coredns/coredns/core/plugin"
+
 	_ "github.com/giantswarm/coredns-warnlist-plugin"
 )
 
