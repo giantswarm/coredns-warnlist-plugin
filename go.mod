@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/alecthomas/mph v0.0.0-20240904185214-2a0c46a2ff46
-	github.com/coredns/caddy v1.1.4
+	github.com/coredns/caddy/v2 v2.1.1
 	github.com/coredns/coredns v1.14.2
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-immutable-radix v1.3.1
