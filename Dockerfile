@@ -1,4 +1,4 @@
-FROM golang:1.24.0 AS builder
+FROM golang:1.25.8 AS builder
 WORKDIR /workspace
 
 # Copy modules manifests
