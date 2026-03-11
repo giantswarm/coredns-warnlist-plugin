@@ -4,25 +4,6 @@ orbs:
   architect: giantswarm/architect@5.13.1
 
 jobs:
-  build-binary:
-    docker:
-    - image: gsoci.azurecr.io/giantswarm/golang:1.24
-    steps:
-    - checkout
-
-    - run:
-        command: go build -o coredns ./cmd/coredns
-        name: Building CoreDNS binary
-
-    - run:
-        command: ./coredns -version
-        name: Printing CoreDNS version
-
-    - persist_to_workspace:
-        root: .
-        paths:
-        - coredns
-
   create-cluster:
     machine:
       image: ubuntu-2404:2024.11.1
