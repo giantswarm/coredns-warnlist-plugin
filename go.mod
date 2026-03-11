@@ -3,7 +3,7 @@ module github.com/giantswarm/coredns-warnlist-plugin
 go 1.25.0
 
 require (
-	github.com/alecthomas/mph v0.0.0-20190930022807-712982e3d8a2
+	github.com/alecthomas/mph v0.0.0-20240904185214-2a0c46a2ff46
 	github.com/coredns/caddy v1.1.4
 	github.com/coredns/coredns v1.14.2
 	github.com/google/go-cmp v0.7.0
@@ -43,7 +43,7 @@ require (
 	github.com/DataDog/go-tuf v1.1.1-0.5.2 // indirect
 	github.com/DataDog/sketches-go v1.4.7 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/alecthomas/unsafeslice v0.1.0 // indirect
+	github.com/alecthomas/unsafeslice v0.2.0 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.41.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.32.10 // indirect

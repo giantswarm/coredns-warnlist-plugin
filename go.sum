@@ -68,10 +68,10 @@ github.com/Masterminds/semver/v3 v3.4.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lpr
 github.com/Microsoft/go-winio v0.5.0/go.mod h1:JPGBdM1cNvN/6ISo+n8V5iA4v8pBzdOpzfwIujj1a84=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
-github.com/alecthomas/mph v0.0.0-20190930022807-712982e3d8a2 h1:3QU1afrYIAZZo5tf7/O7DAOUNn05wlxHZoB9YSXVg08=
-github.com/alecthomas/mph v0.0.0-20190930022807-712982e3d8a2/go.mod h1:HX5roj0AK3pjtDnP4HIV4zY4yW56odJ0LEwgoHL8NLI=
-github.com/alecthomas/unsafeslice v0.1.0 h1:bZlgt0CcjLz1OxjIS//2B5MTfifcGPKmkzvQ7OarOvg=
-github.com/alecthomas/unsafeslice v0.1.0/go.mod h1:H7s9N0gAbfiwu02rQEexZbN/YMxm+2l3rVRa/zE2DM8=
+github.com/alecthomas/mph v0.0.0-20240904185214-2a0c46a2ff46 h1:Bbtev3ntk3aum5+NlKDjz4ZkEmcstYvN246FdeEf4wA=
+github.com/alecthomas/mph v0.0.0-20240904185214-2a0c46a2ff46/go.mod h1:hSgUOEvLZGgwxJ66IX3DU0aHI1izauY3Vc8BVglCn8s=
+github.com/alecthomas/unsafeslice v0.2.0 h1:iCDDpbohRZvgciXn5jkrpDCKv8fYu66+RivRhe6remQ=
+github.com/alecthomas/unsafeslice v0.2.0/go.mod h1:H7s9N0gAbfiwu02rQEexZbN/YMxm+2l3rVRa/zE2DM8=
 github.com/apparentlymart/go-cidr v1.1.0 h1:2mAhrMoF+nhXqxTzSZMUzDHkLjmIHC+Zzn4tdgBZjnU=
 github.com/apparentlymart/go-cidr v1.1.0/go.mod h1:EBcsNrHc3zQeuaeCeCtQruQm+n9/YjEn/vI25Lg7Gwc=
 github.com/aws/aws-sdk-go-v2 v1.41.2 h1:LuT2rzqNQsauaGkPK/7813XxcZ3o3yePY0Iy891T2ls=
