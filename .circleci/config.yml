@@ -52,7 +52,7 @@ jobs:
 
   install-flamethrower:
     docker:
-    - image: quay.io/giantswarm/helm-chart-testing:v3.3.1
+    - image: quay.io/giantswarm/helm-chart-testing:v3.14.0
     parameters:
       chart_path:
         description: The path to the chart to apply.
