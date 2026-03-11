@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Update to coredns v1.14.2.
+- Build plugin as a Go wrapper for coredns.
 - Resolve updated code linter findings.
+- Various dependency updates.
 
 ## [0.2.0] - 2023-01-17
 
