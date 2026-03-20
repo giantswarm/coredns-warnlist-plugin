@@ -7,7 +7,7 @@ require (
 	github.com/coredns/caddy v1.1.4
 	github.com/coredns/coredns v1.14.2
 	github.com/google/go-cmp v0.7.0
-	github.com/hashicorp/go-immutable-radix v1.3.1
+	github.com/hashicorp/go-immutable-radix/v2 v2.1.0
 	github.com/miekg/dns v1.1.72
 	github.com/prometheus/client_golang v1.23.2
 )
@@ -101,7 +101,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
-	github.com/hashicorp/golang-lru v1.0.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.0 // indirect
 	github.com/hashicorp/nomad/api v0.0.0-20250909143645-a3b86c697f38 // indirect
 	github.com/infobloxopen/go-trees v0.0.0-20200715205103-96a057b8dfb9 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
