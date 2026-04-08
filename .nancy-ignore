@@ -1,5 +1,2 @@
-CVE-2023-28452 until=2026-04-08 # github.com/coredns/coredns@v1.12.4
-CVE-2023-30464 until=2026-04-08 # github.com/coredns/coredns@v1.12.4
-CVE-2025-68151 until=2026-04-08 # github.com/coredns/coredns@v1.12.4
-CVE-2026-26017 until=2026-04-08 # github.com/coredns/coredns@v1.12.4
-CVE-2026-26018 until=2026-04-08 # github.com/coredns/coredns@v1.12.4
+CVE-2023-28452 until=2026-05-08 # github.com/coredns/coredns@v1.14.2
+CVE-2023-30464 until=2026-05-08 # github.com/coredns/coredns@v1.14.2
