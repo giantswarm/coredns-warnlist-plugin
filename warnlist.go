@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/alecthomas/mph"
-	iradix "github.com/hashicorp/go-immutable-radix"
+	iradix "github.com/hashicorp/go-immutable-radix/v2"
 )
 
 type Warnlist interface {
