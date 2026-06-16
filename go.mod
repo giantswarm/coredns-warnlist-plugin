@@ -216,3 +216,5 @@ replace golang.org/x/crypto v0.14.0 => golang.org/x/crypto v0.19.0
 replace google.golang.org/protobuf v1.30.0 => google.golang.org/protobuf v1.34.2
 
 replace golang.org/x/net v0.37.0 => golang.org/x/net v0.39.0
+
+replace golang.org/x/sys v0.43.0 => golang.org/x/sys v0.45.0
