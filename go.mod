@@ -167,9 +167,9 @@ require (
 	go.opentelemetry.io/collector/pdata v1.51.1-0.20260205185216-81bc641f26c0 // indirect
 	go.opentelemetry.io/collector/pdata/pprofile v0.145.1-0.20260205185216-81bc641f26c0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0 // indirect
-	go.opentelemetry.io/otel v1.43.0 // indirect
-	go.opentelemetry.io/otel/metric v1.43.0 // indirect
-	go.opentelemetry.io/otel/trace v1.43.0 // indirect
+	go.opentelemetry.io/otel v1.44.0 // indirect
+	go.opentelemetry.io/otel/metric v1.44.0 // indirect
+	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
@@ -218,3 +218,11 @@ replace google.golang.org/protobuf v1.30.0 => google.golang.org/protobuf v1.34.2
 replace golang.org/x/net v0.37.0 => golang.org/x/net v0.39.0
 
 replace golang.org/x/sys v0.43.0 => golang.org/x/sys v0.45.0
+
+replace go.opentelemetry.io/otel v1.43.0 => go.opentelemetry.io/otel v1.44.0
+
+replace go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.14.0 => go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.20.0
+
+replace go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.39.0 => go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.44.0
+
+replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.39.0 => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.44.0

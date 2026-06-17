@@ -18,3 +18,5 @@ CVE-2026-39831 until=2026-06-27 # golang.org/x/crypto@v0.49.0
 CVE-2026-46597 until=2026-06-27 # golang.org/x/crypto@v0.49.0
 CVE-2026-39821 until=2026-06-28 # golang.org/x/net@v0.52.0
 CVE-2026-25680 until=2026-06-28 # golang.org/x/net@v0.52.0
+CVE-2021-43668 until=2026-07-17 # github.com/syndtr/goleveldb@v1.0.1-0.20220721030215-126854af5e6d
+CVE-2026-5160 until=2026-07-17 # github.com/yuin/goldmark@v1.4.13
