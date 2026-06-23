@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/alecthomas/mph v0.0.0-20240904185214-2a0c46a2ff46
-	github.com/coredns/caddy/v2 v2.1.1
+	github.com/coredns/caddy v1.1.4
 	github.com/coredns/coredns v1.14.4
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-immutable-radix/v2 v2.1.0
@@ -107,7 +107,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.8.0 // indirect
-	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/nomad/api v0.0.0-20250909143645-a3b86c697f38 // indirect
 	github.com/infobloxopen/go-trees v0.0.0-20200715205103-96a057b8dfb9 // indirect

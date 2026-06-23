@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/alecthomas/mph"
-	iradix "github.com/hashicorp/go-immutable-radix"
+	iradix "github.com/hashicorp/go-immutable-radix/v2"
 )
 
 type Warnlist interface {
@@ -31,7 +31,7 @@ func NewRadixWarnlist() Warnlist {
 }
 
 type RadixWarnlist struct {
-	warnlist *iradix.Tree
+	warnlist *iradix.Tree[int]
 }
 
 func (r *RadixWarnlist) Add(key string) {
@@ -62,7 +62,7 @@ func (r *RadixWarnlist) Len() int {
 }
 
 func (r *RadixWarnlist) Open() {
-	tree := iradix.New()
+	tree := iradix.New[int]()
 	r.warnlist = tree
 }
 

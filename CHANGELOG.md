@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update dependency `hashicorp/go-immutable-radix` to v2.
+- Revert update of `coredns/caddy` v2.
+
 ## [0.3.0] - 2026-03-11
 
 ### Changed
