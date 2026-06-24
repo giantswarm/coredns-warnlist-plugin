@@ -68,8 +68,11 @@ jobs:
 workflows:
   test:
     jobs:
-    - architect/go-test:
-        name: go-test
+    - architect/go-build:
+        context: architect
+        name: go-build
+        binary: coredns
+        path: ./cmd/coredns
         filters:
             # Trigger job also on git tag.
           tags:
@@ -78,8 +81,10 @@ workflows:
     - architect/push-to-registries:
         context: architect
         name: push-to-registries
+        # Push to Aliyun separately.
+        split-china-push: true
         requires:
-        - go-test
+        - go-build
         filters:
             # Trigger job also on git tag.
           tags:
@@ -88,6 +93,18 @@ workflows:
             ignore:
             - main
             - master
+
+    # Mirror gsoci -> Aliyun on release builds only.
+    - architect/sync-china-registry:
+        context: architect
+        name: sync-china-registry
+        requires:
+        - push-to-registries
+        filters:
+          tags:
+            only: /^v.*/
+          branches:
+            ignore: /.*/
 
     # app-build-suite changes broke this workflow.
     # It isn't possible to determine the name/tag of the built image at this point in the pipeline.

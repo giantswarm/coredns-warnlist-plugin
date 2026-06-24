@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update dependency `hashicorp/go-immutable-radix` to v2.
 - Revert update of `coredns/caddy` v2.
+- Split image push to Aliyun to release builds only.
+- Build binary separately from container image to speed up multi-arch builds.
 
 ## [0.3.0] - 2026-03-11
 
