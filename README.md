@@ -10,7 +10,12 @@ This plugin was previously referred to as `malicious-domains`.
 
 ## Usage
 
-We host a coredns image including this plugin at `quay.io/giantswarm/coredns-warnlist-plugin`. While we will try to keep this up to date on a best-effort basis, this is not an official image and may become behind or out of sync with the official image.
+Giant Swarm publishes a CoreDNS image with this plugin compiled in at
+`gsoci.azurecr.io/giantswarm/coredns-warnlist-plugin:<version>`, tagged per release
+(see the [releases](https://github.com/giantswarm/coredns-warnlist-plugin/releases)).
+It is built from the upstream CoreDNS release pinned in `go.mod` plus this plugin; it is
+not an official CoreDNS image and may lag upstream. The historical `quay.io` repository is
+no longer updated.
 
 Alternatively, you can build an image yourself from the upstream codebase using the instructions in the **Compilation** section below.
 
