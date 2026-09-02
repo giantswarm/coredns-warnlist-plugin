@@ -40,8 +40,8 @@ func domainsFromSource(source string, sourceType string, sourceFormat string) ch
 				log.Error(err)
 				return
 			}
-			defer resp.Body.Close()
-			sourceData = resp.Body // nolint: errcheck
+			defer resp.Body.Close() //nolint:errcheck
+			sourceData = resp.Body
 		default:
 			log.Errorf("Unknown source type: %s", sourceType)
 			return

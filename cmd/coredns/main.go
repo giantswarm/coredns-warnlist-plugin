@@ -17,7 +17,7 @@ import (
 func init() {
 
 	var newDirectives []string
-	var addedWarnlist bool = false
+	addedWarnlist := false
 
 	for _, plugin := range dnsserver.Directives {
 		newDirectives = append(newDirectives, plugin)

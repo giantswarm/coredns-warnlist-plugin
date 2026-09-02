@@ -24,7 +24,7 @@ type PluginOptions struct {
 }
 
 // init registers this plugin.
-func init() { plugin.Register("warnlist", setup) }
+func init() { plugin.Register(pluginName, setup) }
 
 // setup is the function that gets called when the config parser sees the token "warnlist". Setup is responsible
 // for parsing any extra options the plugin may have. The first token this function sees is "warnlist".
@@ -114,7 +114,7 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 	// Check that a source for the warnlist was given
 	if options.DomainSource == "" {
 		log.Error("domain warnlist file or url is required")
-		return options, plugin.Error("warnlist", c.ArgErr())
+		return options, plugin.Error(pluginName, c.ArgErr())
 	}
 
 	// Check that the specified file format is valid
@@ -125,7 +125,7 @@ func parseArguments(c *caddy.Controller) (PluginOptions, error) {
 		}
 	}
 	if !valid {
-		return options, plugin.Error("warnlist", c.Errf("unknown file format: %s", options.FileFormat))
+		return options, plugin.Error(pluginName, c.Errf("unknown file format: %s", options.FileFormat))
 	}
 
 	return options, nil
