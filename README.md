@@ -123,9 +123,8 @@ go build -o coredns ./cmd/coredns
 
 You can then run the compiled `coredns` binary locally with `./coredns -dns.port "1053"`
 
-`make build` works too and writes `coredns-warnlist-plugin` (it needs `gitsemver` on the PATH to
-stamp the version); `make test` runs the unit tests with the race detector where a C toolchain
-is available.
+`make build` works as well and writes `coredns-warnlist-plugin` (it needs `gitsemver` on the PATH to stamp the version).
+`make test` runs the unit tests with the race detector if a C toolchain is available.
 
 ### Local development
 
@@ -137,17 +136,15 @@ replace github.com/giantswarm/coredns-warnlist-plugin => /path/to/go/src/github.
 ## Metrics
 
 If monitoring is enabled (via the *prometheus* plugin) the following metrics are exported.
-All names carry the CoreDNS namespace and this plugin's subsystem, `coredns_warnlist_`,
-followed by the metric name; the full series names are:
+All names carry the CoreDNS namespace and this plugin's subsystem, `coredns_warnlist_`, followed by the metric name; the full series names are:
 
 * `coredns_warnlist_warnlist_hits_total{server, requestor, domain}` - counts requests for warnlisted domains
 * `coredns_warnlist_warnlist_failed_reloads_count{server}` - counts failed warnlist reloads (a counter despite the `_count` suffix, kept for compatibility)
 * `coredns_warnlist_warnlist_cache_check_duration_seconds{server}` - summary of the time taken to check the warnlist
 * `coredns_warnlist_warnlist_warnlisted_items_count{server}` - current number of domains in the warnlist
 
-The `server` label indicates which server handled the request, `requestor` the client IP, and
-`domain` the requested name. Both `requestor` and `domain` are unbounded label sets; on a busy
-resolver facing many distinct malicious names, expect the hits series to grow accordingly.
+The `server` label indicates which server handled the request, `requestor` contains client IP, and `domain` the requested name.
+Both `requestor` and `domain` are unbounded label sets; on a busy resolver facing many distinct malicious names, expect the hits series to grow accordingly.
 
 See the *metrics* plugin for more details.
 
