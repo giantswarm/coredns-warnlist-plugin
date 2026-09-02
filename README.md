@@ -12,6 +12,10 @@ This plugin was previously referred to as `malicious-domains`.
 
 We host a coredns image including this plugin at `quay.io/giantswarm/coredns-warnlist-plugin`. While we will try to keep this up to date on a best-effort basis, this is not an official image and may become behind or out of sync with the official image.
 
+The image runs as the distroless `nonroot` user (uid 65532) and the binary carries the
+`cap_net_bind_service` file capability, like the upstream CoreDNS image, so it can listen
+on port 53 without `runAsUser: 0` or a `net.ipv4.ip_unprivileged_port_start` sysctl.
+
 Alternatively, you can build an image yourself from the upstream codebase using the instructions in the **Compilation** section below.
 
 ## Arguments
