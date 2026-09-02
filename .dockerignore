@@ -1,0 +1,12 @@
+# Keep the build context to the Go sources. The workspace attached by the
+# generated CI carries go-build's artifacts (coredns-warnlist-plugin-*), and
+# local checkouts may hold built binaries; none of them belong in the context.
+.git
+.github
+.circleci
+.cursor
+coredns
+coredns-*
+nancy-fixer
+*.txt
+Corefile*
