@@ -1,4 +1,8 @@
-# warnlist plugin
+# warnlist
+
+## Name
+
+*warnlist* - logs and counts requests for domains on a periodically refreshed warnlist without blocking them.
 
 ## Description
 
@@ -14,7 +18,7 @@ We host a coredns image including this plugin at `quay.io/giantswarm/coredns-war
 
 Alternatively, you can build an image yourself from the upstream codebase using the instructions in the **Compilation** section below.
 
-## Arguments
+## Syntax
 
 The `warnlist` plugin takes the following arguments:
 
