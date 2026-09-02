@@ -15,9 +15,12 @@ import (
 	"github.com/miekg/dns"
 )
 
+// pluginName is the name under which the plugin is registered with CoreDNS.
+const pluginName = "warnlist"
+
 // Define log to be a logger with the plugin name in it. This way we can just use log.Info and
 // friends to log.
-var log = clog.NewWithPlugin("warnlist")
+var log = clog.NewWithPlugin(pluginName)
 
 // WarnlistPlugin is a plugin which counts requests to warnlisted domains
 type WarnlistPlugin struct {
@@ -70,7 +73,7 @@ func (wp *WarnlistPlugin) ServeDNS(ctx context.Context, w dns.ResponseWriter, r 
 }
 
 // Name implements the Handler interface.
-func (wp WarnlistPlugin) Name() string { return "warnlist" }
+func (wp WarnlistPlugin) Name() string { return pluginName }
 
 // ResponsePrinter wraps a dns.ResponseWriter and will let the plugin inspect the response.
 type ResponsePrinter struct {

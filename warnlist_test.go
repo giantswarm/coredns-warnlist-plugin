@@ -7,8 +7,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+const testListedDomain = "example.org"
+
 var testWarnlist = []string{
-	"example.org",
+	testListedDomain,
 	"something.evil",
 	"evil.com",
 	"something.wicked.test",
@@ -23,7 +25,7 @@ func Test_warnlistHits(t *testing.T) {
 	}{
 		{
 			name:   "case 0: a domain in the list is matched",
-			domain: "example.org",
+			domain: testListedDomain,
 			hit:    true,
 		},
 		{
@@ -64,7 +66,7 @@ func Test_radixContains(t *testing.T) {
 	}{
 		{
 			name:   "case 0: a domain in the list is matched",
-			domain: "example.org",
+			domain: testListedDomain,
 			hit:    true,
 		},
 		{
