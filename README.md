@@ -119,6 +119,10 @@ go build -o coredns ./cmd/coredns
 
 You can then run the compiled `coredns` binary locally with `./coredns -dns.port "1053"`
 
+`make build` works too and writes `coredns-warnlist-plugin` (it needs `gitsemver` on the PATH to
+stamp the version); `make test` runs the unit tests with the race detector where a C toolchain
+is available.
+
 ### Local development
 
 To compile using a local copy of the plugin, clone `github.com/coredns/coredns`, modify plugin.cfg as described above, and add a `replace` directive to `go.mod`:
