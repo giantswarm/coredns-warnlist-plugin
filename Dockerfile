@@ -11,8 +11,10 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
+# -tags grpcnotrace matches the upstream CoreDNS Makefile (GOTAGS): it compiles
+# out grpc's golang.org/x/net/trace instrumentation, which nothing here uses.
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    go build -trimpath -ldflags "-s -w" -o /out/coredns ./cmd/coredns
+    go build -trimpath -tags grpcnotrace -ldflags "-s -w" -o /out/coredns ./cmd/coredns
 
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /
