@@ -9,11 +9,6 @@
 /.platforms
 /.ldflags
 
-# Tools people drop into the checkout.
-/nancy-fixer
-
 # Local experiment data, never committed.
-/abusech-hosts.txt
 /domains.txt
 /Corefile
-/Corefile cm
