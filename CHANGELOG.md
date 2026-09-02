@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> **Note:** Since v0.3.2 (August 2026) this repository is released by the auto-release
-> workflow, and release notes are generated from conventional commits on each
-> [GitHub release](https://github.com/giantswarm/coredns-warnlist-plugin/releases).
-> This file is kept for the history up to v0.3.1 and is no longer updated.
-
 ## [0.3.1] - 2026-06-24
 
 ### Changed
