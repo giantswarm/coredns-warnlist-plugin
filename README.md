@@ -1,4 +1,8 @@
-# warnlist plugin
+# warnlist
+
+## Name
+
+*warnlist* - logs and counts requests for domains on a periodically refreshed warnlist without blocking them.
 
 ## Description
 
@@ -15,7 +19,7 @@ It is built from the upstream CoreDNS release pinned in `go.mod` plus this plugi
 
 Alternatively, you can build an image yourself from the upstream codebase using the instructions in the **Compilation** section below.
 
-## Arguments
+## Syntax
 
 The `warnlist` plugin takes the following arguments:
 
@@ -120,6 +124,9 @@ go build -o coredns ./cmd/coredns
 
 You can then run the compiled `coredns` binary locally with `./coredns -dns.port "1053"`
 
+`make build` works as well and writes `coredns-warnlist-plugin` (it needs `gitsemver` on the PATH to stamp the version).
+`make test` runs the unit tests with the race detector if a C toolchain is available.
+
 ### Local development
 
 To compile using a local copy of the plugin, clone `github.com/coredns/coredns`, modify plugin.cfg as described above, and add a `replace` directive to `go.mod`:
@@ -129,18 +136,16 @@ replace github.com/giantswarm/coredns-warnlist-plugin => /path/to/go/src/github.
 
 ## Metrics
 
-If monitoring is enabled (via the *prometheus* directive) the following metrics are exported:
+If monitoring is enabled (via the *prometheus* plugin) the following metrics are exported.
+All names carry the CoreDNS namespace and this plugin's subsystem, `coredns_warnlist_`, followed by the metric name; the full series names are:
 
-* `warnlist_hits_total{server, requestor, domain}` - counts the number of warnlisted domains requested
-* `warnlist_failed_reloads_count{server}` - counts the number of times the plugin has failed to reload its warnlist
-* `warnlist_cache_check_duration_seconds{server}` - summary exposing count and sum for determining the average time it takes to check the cache
-* `warnlist_warnlisted_items_count{server}` - current number of domains stored in the warnlist
+* `coredns_warnlist_warnlist_hits_total{server, requestor, domain}` - counts requests for warnlisted domains
+* `coredns_warnlist_warnlist_failed_reloads_count{server}` - counts failed warnlist reloads (a counter despite the `_count` suffix, kept for compatibility)
+* `coredns_warnlist_warnlist_cache_check_duration_seconds{server}` - summary of the time taken to check the warnlist
+* `coredns_warnlist_warnlist_warnlisted_items_count{server}` - current number of domains in the warnlist
 
-The `server` label indicated which server handled the request.
-
-The `requestor` label indicates the IP which requested the domain.
-
-The `domain` label indicates the actual domain which was requested.
+The `server` label indicates which server handled the request, `requestor` contains client IP, and `domain` the requested name.
+Both `requestor` and `domain` are unbounded label sets; on a busy resolver facing many distinct malicious names, expect the hits series to grow accordingly.
 
 See the *metrics* plugin for more details.
 
