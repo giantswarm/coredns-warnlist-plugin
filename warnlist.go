@@ -148,11 +148,15 @@ func buildCacheFromFile(options PluginOptions) (Warnlist, error) {
 		}
 	}
 
-	for domain := range domainsFromSource(options.DomainSource, options.DomainSourceType, options.FileFormat) {
+	domains, err := domainsFromSource(options.DomainSource, options.DomainSourceType, options.FileFormat)
+	if err != nil {
+		return nil, err
+	}
+	for domain := range domains {
 		warnlist.Add(domain)
 	}
 
-	err := warnlist.Close()
+	err = warnlist.Close()
 	if err == nil {
 		log.Infof("added %d domains to warnlist", warnlist.Len())
 	}

@@ -1,0 +1,14 @@
+# Local builds of the wrapper (go build -o coredns ./cmd/coredns) and the
+# artifacts the architect go-build job persists (<binary>-<os>-<arch>, cosign
+# bundles, .platforms), plus the generated Makefile's outputs.
+/coredns
+/coredns-*
+/coredns-warnlist-plugin
+/coredns-warnlist-plugin-*
+*.bundle
+/.platforms
+/.ldflags
+
+# Local experiment data, never committed.
+/domains.txt
+/Corefile

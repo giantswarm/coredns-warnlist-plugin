@@ -2,8 +2,6 @@ package warnlist
 
 import (
 	"context"
-	"io"
-	"os"
 	"time"
 
 	"github.com/coredns/coredns/request"
@@ -89,6 +87,3 @@ func NewResponsePrinter(w dns.ResponseWriter) *ResponsePrinter {
 func (r *ResponsePrinter) WriteMsg(res *dns.Msg) error {
 	return r.ResponseWriter.WriteMsg(res)
 }
-
-// Make out a reference to os.Stdout so we can easily overwrite it for testing.
-var out io.Writer = os.Stdout // nolint: unused

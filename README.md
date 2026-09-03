@@ -1,4 +1,8 @@
-# warnlist plugin
+# warnlist
+
+## Name
+
+*warnlist* - logs and counts requests for domains on a periodically refreshed warnlist without blocking them.
 
 ## Description
 
@@ -10,11 +14,16 @@ This plugin was previously referred to as `malicious-domains`.
 
 ## Usage
 
-We host a coredns image including this plugin at `quay.io/giantswarm/coredns-warnlist-plugin`. While we will try to keep this up to date on a best-effort basis, this is not an official image and may become behind or out of sync with the official image.
+Giant Swarm publishes a CoreDNS image with this plugin compiled in at `gsoci.azurecr.io/giantswarm/coredns-warnlist-plugin:<version>`, tagged per release (see the [releases](https://github.com/giantswarm/coredns-warnlist-plugin/releases)).
+It is built from the upstream CoreDNS release pinned in `go.mod` plus this plugin; it is not an official CoreDNS image and may lag behind upstream.
+
+The image runs as the distroless `nonroot` user (uid 65532) and the binary carries the
+`cap_net_bind_service` file capability, like the upstream CoreDNS image, so it can listen
+on port 53 without `runAsUser: 0` or a `net.ipv4.ip_unprivileged_port_start` sysctl.
 
 Alternatively, you can build an image yourself from the upstream codebase using the instructions in the **Compilation** section below.
 
-## Arguments
+## Syntax
 
 The `warnlist` plugin takes the following arguments:
 
@@ -119,6 +128,9 @@ go build -o coredns ./cmd/coredns
 
 You can then run the compiled `coredns` binary locally with `./coredns -dns.port "1053"`
 
+`make build` works as well and writes `coredns-warnlist-plugin` (it needs `gitsemver` on the PATH to stamp the version).
+`make test` runs the unit tests with the race detector if a C toolchain is available.
+
 ### Local development
 
 To compile using a local copy of the plugin, clone `github.com/coredns/coredns`, modify plugin.cfg as described above, and add a `replace` directive to `go.mod`:
@@ -128,18 +140,16 @@ replace github.com/giantswarm/coredns-warnlist-plugin => /path/to/go/src/github.
 
 ## Metrics
 
-If monitoring is enabled (via the *prometheus* directive) the following metrics are exported:
+If monitoring is enabled (via the *prometheus* plugin) the following metrics are exported.
+All names carry the CoreDNS namespace and this plugin's subsystem, `coredns_warnlist_`, followed by the metric name; the full series names are:
 
-* `warnlist_hits_total{server, requestor, domain}` - counts the number of warnlisted domains requested
-* `warnlist_failed_reloads_count{server}` - counts the number of times the plugin has failed to reload its warnlist
-* `warnlist_cache_check_duration_seconds{server}` - summary exposing count and sum for determining the average time it takes to check the cache
-* `warnlist_warnlisted_items_count{server}` - current number of domains stored in the warnlist
+* `coredns_warnlist_warnlist_hits_total{server, requestor, domain}` - counts requests for warnlisted domains
+* `coredns_warnlist_warnlist_failed_reloads_count{server}` - counts failed warnlist reloads (a counter despite the `_count` suffix, kept for compatibility)
+* `coredns_warnlist_warnlist_cache_check_duration_seconds{server}` - summary of the time taken to check the warnlist
+* `coredns_warnlist_warnlist_warnlisted_items_count{server}` - current number of domains in the warnlist
 
-The `server` label indicated which server handled the request.
-
-The `requestor` label indicates the IP which requested the domain.
-
-The `domain` label indicates the actual domain which was requested.
+The `server` label indicates which server handled the request, `requestor` contains client IP, and `domain` the requested name.
+Both `requestor` and `domain` are unbounded label sets; on a busy resolver facing many distinct malicious names, expect the hits series to grow accordingly.
 
 See the *metrics* plugin for more details.
 
