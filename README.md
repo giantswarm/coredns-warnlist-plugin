@@ -17,6 +17,10 @@ This plugin was previously referred to as `malicious-domains`.
 Giant Swarm publishes a CoreDNS image with this plugin compiled in at `gsoci.azurecr.io/giantswarm/coredns-warnlist-plugin:<version>`, tagged per release (see the [releases](https://github.com/giantswarm/coredns-warnlist-plugin/releases)).
 It is built from the upstream CoreDNS release pinned in `go.mod` plus this plugin; it is not an official CoreDNS image and may lag behind upstream.
 
+The image runs as the distroless `nonroot` user (uid 65532) and the binary carries the
+`cap_net_bind_service` file capability, like the upstream CoreDNS image, so it can listen
+on port 53 without `runAsUser: 0` or a `net.ipv4.ip_unprivileged_port_start` sysctl.
+
 Alternatively, you can build an image yourself from the upstream codebase using the instructions in the **Compilation** section below.
 
 ## Syntax
