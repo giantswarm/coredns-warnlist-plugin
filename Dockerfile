@@ -5,7 +5,7 @@
 # (architect-orb docs/multi-arch-dockerfiles.md, pattern B). The generated
 # architect/go-build job cannot produce this binary: it builds the repo root,
 # which is the plugin library package, not a main package.
-FROM --platform=$BUILDPLATFORM gsoci.azurecr.io/giantswarm/golang:1.27.0-alpine3.23 AS build
+FROM --platform=$BUILDPLATFORM gsoci.azurecr.io/giantswarm/golang:1.27.1-alpine3.23 AS build
 ARG TARGETOS TARGETARCH
 WORKDIR /src
 COPY go.mod go.sum ./
@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
 # so without this the nonroot image cannot bind :53 even when the pod adds
 # NET_BIND_SERVICE. setcap only writes an xattr, so it works on the
 # cross-compiled target binary from the host-platform stage.
-FROM --platform=$BUILDPLATFORM gsoci.azurecr.io/giantswarm/golang:1.27.0-alpine3.23 AS caps
+FROM --platform=$BUILDPLATFORM gsoci.azurecr.io/giantswarm/golang:1.27.1-alpine3.23 AS caps
 # libcap is unpinned on purpose: Alpine drops superseded package versions from
 # its mirrors, so a pinned version would break the build at the next Alpine
 # point release. The Alpine release itself is pinned by the base image tag.
