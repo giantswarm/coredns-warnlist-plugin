@@ -1,6 +1,6 @@
 module github.com/giantswarm/coredns-warnlist-plugin
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/alecthomas/mph v0.0.0-20240904185214-2a0c46a2ff46
@@ -236,3 +236,5 @@ replace go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.39.
 replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.39.0 => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.44.0
 
 replace go.opentelemetry.io/otel/sdk/log v0.14.0 => go.opentelemetry.io/otel/sdk/log v0.22.0
+
+replace golang.org/x/mod v0.38.0 => golang.org/x/mod v0.41.0
