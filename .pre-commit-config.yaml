@@ -2,17 +2,22 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/529e8924bb4b0b60fb205dbbfb874ffc09d73e09/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/9a048de85505c3accd94b9665f6a154bc8429f07/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
+# Protobuf-generated code (protoc, buf: *_pb.ts, *_pb.js, *_pb2.py,
+# *_pb2_grpc.py, *.pb.go, *_grpc.pb.go) belongs to its generator: a hook that
+# rewrote it (end-of-file-fixer, go-imports, ruff --fix) would be undone by
+# the next generation, so no hook reads it.
+exclude: "(_pb2?|\\.pb)(_grpc)?\\.[^/]+$"
 repos:
   # base hooks
   #
   # helm/<chart>/charts/ holds vendored upstream subcharts (vendir-synced).
   # Those files are not repo-authored: the auto-fixing hooks would rewrite
   # them on every vendir bump and the next vendir sync would revert the fix,
-  # so the whitespace/shebang hooks skip the vendored subtree.
+  # so the whitespace/shebang/private-key hooks skip the vendored subtree.
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -20,12 +25,16 @@ repos:
       - id: check-shebang-scripts-are-executable
         exclude: "^helm/[^/]+/charts/.*"
       - id: detect-private-key
-      - id: end-of-file-fixer
-        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*)"
-      - id: mixed-line-ending
+        # Upstream charts document key formats with placeholder PEM headers
+        # (redis-ha's restore.ssh.key example) that the hook cannot tell from
+        # a key; gitleaks stays the scanner of record for the vendored subtree.
         exclude: "^helm/[^/]+/charts/.*"
+      - id: end-of-file-fixer
+        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*|.*.patch)"
+      - id: mixed-line-ending
+        exclude: "(^helm/[^/]+/charts/.*|.*.patch)"
       - id: trailing-whitespace
-        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*)"
+        exclude: "(.*testdata/.*|^\\.yarn/.*|^helm/[^/]+/charts/.*|.*.patch)"
 
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
@@ -45,8 +54,8 @@ repos:
           - -E=gosec
           - -E=goconst
           - -E=govet
-          # timeout is needed for CI
-          - --timeout=300s
+          # No --timeout: golangci-lint v2 has none by default and a flag would
+          # override a repo's `run.timeout` in .golangci.yml, its place to set one.
           # List all issues found
           - --max-same-issues=0
           - --max-issues-per-linter=0
