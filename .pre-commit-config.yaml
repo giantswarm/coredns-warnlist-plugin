@@ -2,7 +2,7 @@
 #
 #    devctl
 #
-#    https://github.com/giantswarm/devctl/blob/9a048de85505c3accd94b9665f6a154bc8429f07/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
+#    https://github.com/giantswarm/devctl/blob/8f633b8ebe3132677b60fc6b0a5fdee946339bc7/pkg/gen/input/precommit/internal/file/pre-commit-config.yaml.template
 #
 minimum_pre_commit_version: '2.17'
 default_install_hook_types: [pre-commit, commit-msg]
@@ -61,3 +61,15 @@ repos:
           - --max-issues-per-linter=0
       - id: go-imports
         args: [ -local, github.com/giantswarm/coredns-warnlist-plugin ]
+
+  # Renovate's gomod manager reads a require line's trailing comment as one
+  # word (`// indirect`); a line whose comment has more words is skipped
+  # without a PR or a dashboard entry, so the dependency silently stops being
+  # updated. The explanation goes on a comment line above the require instead.
+  - repo: local
+    hooks:
+      - id: go-mod-require-comment
+        name: "go.mod require comment is one word (Renovate skips the line otherwise; move the explanation to a comment line above it)"
+        language: pygrep
+        files: (^|/)go\.mod$
+        entry: '^\s*(require\s+)?[A-Za-z0-9][^\s,]*[./][^\s,]*\s+v[0-9]\S*\s*//\s*\S+\s+\S'
