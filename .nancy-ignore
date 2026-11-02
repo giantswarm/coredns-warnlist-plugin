@@ -17,3 +17,5 @@ CVE-2026-81871 until=2026-11-04 # go.opentelemetry.io/otel/exporters/otlp/otlplo
 CVE-2021-43668 until=2026-11-27 # github.com/syndtr/goleveldb@v1.0.1-0.20220721030215-126854af5e6d since=2026-10-28
 CVE-2026-5160 until=2026-11-27 # github.com/yuin/goldmark@v1.4.13 since=2026-10-28
 CVE-2026-81872 until=2026-11-27 # go.opentelemetry.io/otel/sdk/log@v0.19.0 since=2026-10-28
+CVE-2026-84445 until=2026-11-30 # google.golang.org/grpc@v1.84.0 since=2026-11-02 false positive: GHSA-2v4p-qf9q-27wj is patched in v1.84.0
+CVE-2026-107347 until=2026-11-30 # github.com/hashicorp/nomad/api@v0.0.0-20250909143645-a3b86c697f38 since=2026-11-02 GHSA-qx6c-5f28-88p2 is a Nomad server dispatch-payload bug; only the api client is pulled in (indirect)
